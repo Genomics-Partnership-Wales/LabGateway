@@ -4,7 +4,7 @@ version: 1.0
 date_created: 2025-11-25
 last_updated: 2025-11-25
 owner: Development Team
-status: 'Phase 2 In Progress - Application Layer Services'
+status: 'Phase 3 In Progress - Infrastructure Layer Implementations'
 tags: [feature, architecture, ddd, hl7, azure-functions, integration]
 ---
 
@@ -124,14 +124,14 @@ This implementation plan defines the complete architecture and implementation st
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-008 | Create `src/API/Application/` folder structure with subfolders: `Services/`, `DTOs/` | | |
-| TASK-009 | Implement `Application/DTOs/LabMetadataDto.cs` record matching JSON response from metadata API - properties TBD based on actual API schema | | |
-| TASK-010 | Define `Application/Services/ILabMetadataService.cs` interface with method: `Task<LabMetadata> GetLabMetadataAsync(LabNumber labNumber, CancellationToken cancellationToken = default)` throwing MetadataNotFoundException on 404 | | |
-| TASK-011 | Define `Application/Services/IHl7MessageBuilder.cs` interface with method: `string BuildOruR01Message(LabReport labReport)` throwing Hl7GenerationException on failure | | |
-| TASK-012 | Define `Application/Services/IMessageQueueService.cs` interface with methods: `Task SendToProcessingQueueAsync(string message, CancellationToken cancellationToken = default)`, `Task SendToPoisonQueueAsync(string message, int retryCount, CancellationToken cancellationToken = default)` | | |
-| TASK-013 | Define `Application/Services/IBlobStorageService.cs` interface with method: `Task MoveToFailedFolderAsync(string blobName, CancellationToken cancellationToken = default)` | | |
-| TASK-014 | Define `Application/Services/ILabReportProcessor.cs` orchestration interface with method: `Task ProcessLabReportAsync(string blobName, byte[] pdfContent, CancellationToken cancellationToken = default)` coordinating full workflow: extract LabNumber → fetch metadata → build HL7 → queue message | | |
-| TASK-015 | Implement `Application/Services/LabReportProcessor.cs` orchestration service with constructor injecting ILabMetadataService, IHl7MessageBuilder, IMessageQueueService, ILogger<LabReportProcessor>, implementing ProcessLabReportAsync with try-catch error handling and structured logging | | |
+| TASK-008 | Create `src/API/Application/` folder structure with subfolders: `Services/`, `DTOs/` | ✅ | 2025-11-25 |
+| TASK-009 | Implement `Application/DTOs/LabMetadataDto.cs` record matching JSON response from metadata API - properties TBD based on actual API schema | ✅ | 2025-11-25 |
+| TASK-010 | Define `Application/Services/ILabMetadataService.cs` interface with method: `Task<LabMetadata> GetLabMetadataAsync(LabNumber labNumber, CancellationToken cancellationToken = default)` throwing MetadataNotFoundException on 404 | ✅ | 2025-11-25 |
+| TASK-011 | Define `Application/Services/IHl7MessageBuilder.cs` interface with method: `string BuildOruR01Message(LabReport labReport)` throwing Hl7GenerationException on failure | ✅ | 2025-11-25 |
+| TASK-012 | Define `Application/Services/IMessageQueueService.cs` interface with methods: `Task SendToProcessingQueueAsync(string message, CancellationToken cancellationToken = default)`, `Task SendToPoisonQueueAsync(string message, int retryCount, CancellationToken cancellationToken = default)` | ✅ | 2025-11-25 |
+| TASK-013 | Define `Application/Services/IBlobStorageService.cs` interface with method: `Task MoveToFailedFolderAsync(string blobName, CancellationToken cancellationToken = default)` | ✅ | 2025-11-25 |
+| TASK-014 | Define `Application/Services/ILabReportProcessor.cs` orchestration interface with method: `Task ProcessLabReportAsync(string blobName, byte[] pdfContent, CancellationToken cancellationToken = default)` coordinating full workflow: extract LabNumber → fetch metadata → build HL7 → queue message | ✅ | 2025-11-25 |
+| TASK-015 | Implement `Application/Services/LabReportProcessor.cs` orchestration service with constructor injecting ILabMetadataService, IHl7MessageBuilder, IMessageQueueService, ILogger<LabReportProcessor>, implementing ProcessLabReportAsync with try-catch error handling and structured logging | ✅ | 2025-11-25 |
 
 ### Implementation Phase 3: Infrastructure Layer Implementations
 
