@@ -1,0 +1,341 @@
+{
+  "testFiles": [
+    {
+      "filename": "LAB001_20251125_143022.json",
+      "description": "Standard complete lab result with all fields",
+      "content": {
+        "labNumber": "LAB001",
+        "specimenId": "SPEC-2025-001",
+        "collectionDate": "2025-11-25T14:30:22Z",
+        "receivedDate": "2025-11-25T15:45:00Z",
+        "completedDate": "2025-11-25T18:20:15Z",
+        "testType": "Complete Blood Count",
+        "testCode": "CBC",
+        "results": [
+          {
+            "testName": "White Blood Cell Count",
+            "testCode": "WBC",
+            "value": "7.5",
+            "unit": "10^3/uL",
+            "referenceRange": "4.5-11.0",
+            "abnormalFlag": "N",
+            "status": "F"
+          },
+          {
+            "testName": "Red Blood Cell Count",
+            "testCode": "RBC",
+            "value": "4.8",
+            "unit": "10^6/uL",
+            "referenceRange": "4.5-5.9",
+            "abnormalFlag": "N",
+            "status": "F"
+          },
+          {
+            "testName": "Hemoglobin",
+            "testCode": "HGB",
+            "value": "14.2",
+            "unit": "g/dL",
+            "referenceRange": "13.5-17.5",
+            "abnormalFlag": "N",
+            "status": "F"
+          },
+          {
+            "testName": "Platelet Count",
+            "testCode": "PLT",
+            "value": "250",
+            "unit": "10^3/uL",
+            "referenceRange": "150-400",
+            "abnormalFlag": "N",
+            "status": "F"
+          }
+        ],
+        "orderingPhysician": {
+          "name": "Dr. Sarah Johnson",
+          "npi": "1234567890",
+          "facility": "City Medical Center"
+        },
+        "performingLab": {
+          "name": "Quest Diagnostics",
+          "clia": "22D1234567",
+          "address": "123 Lab Street, Medical City, MC 12345"
+        }
+      }
+    },
+    {
+      "filename": "LAB002_20251125_091545.json",
+      "description": "Lab result with abnormal values (high)",
+      "content": {
+        "labNumber": "LAB002",
+        "specimenId": "SPEC-2025-002",
+        "collectionDate": "2025-11-25T09:15:45Z",
+        "receivedDate": "2025-11-25T10:00:00Z",
+        "completedDate": "2025-11-25T13:30:22Z",
+        "testType": "Comprehensive Metabolic Panel",
+        "testCode": "CMP",
+        "results": [
+          {
+            "testName": "Glucose",
+            "testCode": "GLU",
+            "value": "145",
+            "unit": "mg/dL",
+            "referenceRange": "70-100",
+            "abnormalFlag": "H",
+            "status": "F"
+          },
+          {
+            "testName": "Blood Urea Nitrogen",
+            "testCode": "BUN",
+            "value": "28",
+            "unit": "mg/dL",
+            "referenceRange": "7-20",
+            "abnormalFlag": "H",
+            "status": "F"
+          },
+          {
+            "testName": "Creatinine",
+            "testCode": "CREAT",
+            "value": "1.8",
+            "unit": "mg/dL",
+            "referenceRange": "0.7-1.3",
+            "abnormalFlag": "H",
+            "status": "F"
+          },
+          {
+            "testName": "Sodium",
+            "testCode": "NA",
+            "value": "140",
+            "unit": "mmol/L",
+            "referenceRange": "136-145",
+            "abnormalFlag": "N",
+            "status": "F"
+          },
+          {
+            "testName": "Potassium",
+            "testCode": "K",
+            "value": "4.2",
+            "unit": "mmol/L",
+            "referenceRange": "3.5-5.0",
+            "abnormalFlag": "N",
+            "status": "F"
+          }
+        ],
+        "orderingPhysician": {
+          "name": "Dr. Michael Chen",
+          "npi": "9876543210",
+          "facility": "Regional Hospital"
+        },
+        "performingLab": {
+          "name": "LabCorp",
+          "clia": "33D9876543",
+          "address": "456 Testing Ave, Lab Town, LT 67890"
+        }
+      }
+    },
+    {
+      "filename": "LAB003_20251124_163012.json",
+      "description": "Minimal lab result (missing optional fields)",
+      "content": {
+        "labNumber": "LAB003",
+        "specimenId": "SPEC-2025-003",
+        "collectionDate": "2025-11-24T16:30:12Z",
+        "completedDate": "2025-11-24T20:15:00Z",
+        "testType": "Lipid Panel",
+        "testCode": "LIPID",
+        "results": [
+          {
+            "testName": "Total Cholesterol",
+            "testCode": "CHOL",
+            "value": "195",
+            "unit": "mg/dL",
+            "referenceRange": "<200",
+            "abnormalFlag": "N",
+            "status": "F"
+          },
+          {
+            "testName": "HDL Cholesterol",
+            "testCode": "HDL",
+            "value": "55",
+            "unit": "mg/dL",
+            "referenceRange": ">40",
+            "abnormalFlag": "N",
+            "status": "F"
+          },
+          {
+            "testName": "LDL Cholesterol",
+            "testCode": "LDL",
+            "value": "115",
+            "unit": "mg/dL",
+            "referenceRange": "<100",
+            "abnormalFlag": "H",
+            "status": "F"
+          },
+          {
+            "testName": "Triglycerides",
+            "testCode": "TRIG",
+            "value": "125",
+            "unit": "mg/dL",
+            "referenceRange": "<150",
+            "abnormalFlag": "N",
+            "status": "F"
+          }
+        ],
+        "orderingPhysician": {
+          "name": "Dr. Emily Rodriguez"
+        },
+        "performingLab": {
+          "name": "Local Lab Services",
+          "clia": "44D5551234"
+        }
+      }
+    },
+    {
+      "filename": "LAB004_20251125_073000.json",
+      "description": "Lab result with corrected values and notes",
+      "content": {
+        "labNumber": "LAB004",
+        "specimenId": "SPEC-2025-004",
+        "collectionDate": "2025-11-25T07:30:00Z",
+        "receivedDate": "2025-11-25T08:15:00Z",
+        "completedDate": "2025-11-25T11:45:30Z",
+        "testType": "Thyroid Function Panel",
+        "testCode": "THYROID",
+        "results": [
+          {
+            "testName": "TSH",
+            "testCode": "TSH",
+            "value": "2.5",
+            "unit": "mIU/L",
+            "referenceRange": "0.4-4.0",
+            "abnormalFlag": "N",
+            "status": "F",
+            "notes": "Normal thyroid function"
+          },
+          {
+            "testName": "Free T4",
+            "testCode": "FT4",
+            "value": "1.2",
+            "unit": "ng/dL",
+            "referenceRange": "0.8-1.8",
+            "abnormalFlag": "N",
+            "status": "C",
+            "notes": "Corrected value - originally reported as 1.8"
+          },
+          {
+            "testName": "Free T3",
+            "testCode": "FT3",
+            "value": "3.1",
+            "unit": "pg/mL",
+            "referenceRange": "2.3-4.2",
+            "abnormalFlag": "N",
+            "status": "F"
+          }
+        ],
+        "orderingPhysician": {
+          "name": "Dr. James Wilson",
+          "npi": "5555666777",
+          "facility": "Endocrine Specialty Clinic"
+        },
+        "performingLab": {
+          "name": "Specialty Lab Inc",
+          "clia": "55D7778889",
+          "address": "789 Science Park, Research City, RC 11111"
+        },
+        "comments": "Free T4 result corrected due to calibration adjustment"
+      }
+    },
+    {
+      "filename": "LAB005_20251125_201530.json",
+      "description": "Complex lab result with multiple panels and critical values",
+      "content": {
+        "labNumber": "LAB005",
+        "specimenId": "SPEC-2025-005",
+        "collectionDate": "2025-11-25T20:15:30Z",
+        "receivedDate": "2025-11-25T20:45:00Z",
+        "completedDate": "2025-11-25T23:30:15Z",
+        "testType": "Emergency Panel",
+        "testCode": "EMERGENCY",
+        "priority": "STAT",
+        "results": [
+          {
+            "testName": "Troponin I",
+            "testCode": "TROP",
+            "value": "0.8",
+            "unit": "ng/mL",
+            "referenceRange": "<0.04",
+            "abnormalFlag": "HH",
+            "status": "F",
+            "critical": true,
+            "notes": "CRITICAL VALUE - Physician notified at 23:35"
+          },
+          {
+            "testName": "D-Dimer",
+            "testCode": "DDIMER",
+            "value": "1200",
+            "unit": "ng/mL",
+            "referenceRange": "<500",
+            "abnormalFlag": "H",
+            "status": "F"
+          },
+          {
+            "testName": "BNP",
+            "testCode": "BNP",
+            "value": "450",
+            "unit": "pg/mL",
+            "referenceRange": "<100",
+            "abnormalFlag": "H",
+            "status": "F"
+          },
+          {
+            "testName": "Potassium",
+            "testCode": "K",
+            "value": "5.8",
+            "unit": "mmol/L",
+            "referenceRange": "3.5-5.0",
+            "abnormalFlag": "H",
+            "status": "F",
+            "critical": true,
+            "notes": "CRITICAL VALUE - Physician notified at 23:32"
+          },
+          {
+            "testName": "Lactate",
+            "testCode": "LACT",
+            "value": "3.5",
+            "unit": "mmol/L",
+            "referenceRange": "0.5-2.2",
+            "abnormalFlag": "H",
+            "status": "F"
+          }
+        ],
+        "orderingPhysician": {
+          "name": "Dr. Amanda Taylor",
+          "npi": "1112223334",
+          "facility": "Emergency Department - City Hospital"
+        },
+        "performingLab": {
+          "name": "City Hospital Laboratory",
+          "clia": "11D2223334",
+          "address": "999 Emergency Blvd, Medical Center, MC 99999"
+        },
+        "comments": "STAT processing. Critical values called to Dr. Taylor. Patient in ER."
+      }
+    }
+  ],
+  "instructions": {
+    "usage": "Save each 'content' object as a separate JSON file with the specified filename",
+    "testing_scenarios": [
+      "LAB001: Test normal processing flow with complete data",
+      "LAB002: Test handling of abnormal/high values",
+      "LAB003: Test minimal required fields (missing optional data)",
+      "LAB004: Test corrected results and notes handling",
+      "LAB005: Test STAT priority, critical values, and physician notifications"
+    ],
+    "validation_points": [
+      "Verify all required fields are present",
+      "Check abnormal flag handling (N, H, L, HH, LL)",
+      "Validate date/timestamp parsing",
+      "Test optional field handling (null/missing values)",
+      "Verify critical value flagging and notifications",
+      "Check status codes (F=Final, C=Corrected, P=Preliminary)"
+    ]
+  }
+}
