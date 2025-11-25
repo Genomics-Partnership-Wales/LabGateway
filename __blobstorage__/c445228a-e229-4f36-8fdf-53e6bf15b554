@@ -1,0 +1,36 @@
+﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2021-11-11T11:29:46.206Z",
+      "EndDate": "2021-11-11T11:29:46.206Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "CHANGE",
+        "ConfigTime": "2021-11-11T11:29:46.206Z",
+        "Fullname": "Integrated-Fylde DMZ.Warbreck.SR1.Reservoir 1 Compartment 1.Level System 1 - ROC (~C~).Time to Empty (hrs)",
+        "Id": 5449317,
+        "StateAreaOfInterest": "East. N",
+        "TypeName": "CPointAlgManual"
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2022-08-15T12:17:01.942Z",
+      "EndDate": "2022-08-15T12:17:01.942Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "ON_EXPORT",
+        "Fullname": "South Lakes Lancs-Leven.Newbiggin (Coast Road).WW1.Final Effluent 1.Unconsented Spill 1.LX_SPILL",
+        "Id": 5492660,
+        "TypeName": "CPointDigitalCalc",
+        "ConfigTime": "2022-08-15T12:17:01.942Z"
+      }
+    ]
+  }
+}

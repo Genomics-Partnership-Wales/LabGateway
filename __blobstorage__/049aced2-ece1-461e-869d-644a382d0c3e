@@ -1,0 +1,132 @@
+{
+  "masterKey": {
+    "name": "master",
+    "value": "AjDONtQyQkU1yGgGi0ZuXbBKEiZyqr3hzFO81v7Gp-oyAzFuGOQFfA==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "8tC90aTsVT4Mwja5gx8fJooqN4mzYJPz6izgzLTINWuJAzFuIZtICg==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [],
+  "hostName": "localhost:7176",
+  "instanceId": "0000000000000000000000001893FEDE",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}{
+  "masterKey": {
+    "name": "master",
+    "value": "AjDONtQyQkU1yGgGi0ZuXbBKEiZyqr3hzFO81v7Gp-oyAzFuGOQFfA==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "8tC90aTsVT4Mwja5gx8fJooqN4mzYJPz6izgzLTINWuJAzFuIZtICg==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [
+    {
+      "name": "blobs_extension",
+      "value": "WZ141na0_bU5uiawJ9fz_jM5jm8FBDHf-75tC15CVQkZAzFuK65IiQ==",
+      "encrypted": false
+    }
+  ],
+  "hostName": "localhost:7176",
+  "instanceId": "0000000000000000000000001893FEDE",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2021-11-26T14:44:24.149Z",
+      "EndDate": "2021-11-26T14:44:24.149Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "CHANGE",
+        "ConfigTime": "2021-11-26T14:44:24.149Z",
+        "ConfigUser": "_sup_C102709",
+        "Fullname": "Fylde-Wyre.Inskip.WW1.Ferric 1 Storage Tank 1.Valve - Outlet 1.VA_AV",
+        "Id": 5467850,
+        "TypeName": "CWITSBinaryIn"
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2022-08-18T12:06:49.772Z",
+      "EndDate": "2022-08-18T12:06:49.772Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "ON_EXPORT",
+        "Fullname": "Upper Mersey-Upper MSC.Yew Tree.SU1.~ Comms.Router LAN Status.Router LAN",
+        "Id": 5497672,
+        "TypeName": "CICMPDigital",
+        "ConfigTime": "2022-08-18T12:06:49.772Z"
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2022-08-16T19:48:15.745Z",
+      "EndDate": "2022-08-16T19:48:15.745Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "ON_EXPORT",
+        "Fullname": "Integrated-Halton DMZ.Runcorn (Highlands Road).SU1.~ Comms.Router LAN Status.Router LAN",
+        "Id": 5468830,
+        "TypeName": "CICMPDigital",
+        "ConfigTime": "2022-08-16T19:48:15.745Z"
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2021-12-13T10:20:36.566Z",
+      "EndDate": "2021-12-13T10:20:36.566Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "CHANGE",
+        "ConfigTime": "2021-12-13T10:20:36.566Z",
+        "Fullname": "Integrated-Liverpool DMZ.Prescot.SR1.Reservoir 1 Compartment 1.Level System 1.LX_PV_IN",
+        "Id": 2099693,
+        "TunedTime": "2021-12-15T08:01:22.604Z",
+        "TypeName": "CDNP3AnalogIn"
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2021-12-17T12:59:46.278Z",
+      "EndDate": "2021-12-17T12:59:46.278Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "CHANGE",
+        "ConfigTime": "2021-12-17T12:59:46.278Z",
+        "Fullname": "Integrated-Tameside DMZ.Denton (Manchester Road North).TW1.Contact Tank 1 Common Inlet.Quality System - pH 1.QX_PV_IN",
+        "Id": 2339850,
+        "Limit1Hysteresis": 0.00999999977648258,
+        "Limit2Hysteresis": 0.00999999977648258,
+        "TypeName": "CWITSAnalogIn"
+      }
+    ]
+  }
+}

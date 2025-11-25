@@ -1,0 +1,37 @@
+﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2022-01-28T12:34:58.811Z",
+      "EndDate": "2022-01-28T12:34:58.811Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "CHANGE",
+        "ConfigTime": "2022-01-28T12:34:58.811Z",
+        "ConfigUser": "Interface",
+        "Fullname": "Integrated-Southport DMZ.Blundell House.SU1.Common Services.Borehole Shutdown.GX_FLT",
+        "Id": 5500967,
+        "TypeName": "CWITSBinaryIn"
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2020-11-23T15:00:47.324Z",
+      "EndDate": "2020-11-23T15:00:47.324Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "CHANGE",
+        "ConfigTime": "2020-11-23T15:00:47.324Z",
+        "Fullname": "Integrated-Liverpool DMZ.Prescot.BP2.NPS 1.Flow System - Delivery 1.FX_PV_IN",
+        "Id": 2099178,
+        "TunedTime": "2021-12-24T07:13:25.539Z",
+        "TypeName": "CDNP3AnalogIn"
+      }
+    ]
+  }
+}
