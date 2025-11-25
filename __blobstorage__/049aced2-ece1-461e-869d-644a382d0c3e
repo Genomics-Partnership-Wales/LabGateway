@@ -129,4 +129,191 @@
       }
     ]
   }
+}{
+  "masterKey": {
+    "name": "master",
+    "value": "lx5TM8musq3QYCL-b3x_Pt-s3HdQuU5MHBTrm-7OemFcAzFu--oRkQ==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "kFrIv1EiLLgvTAemFNCkOA-KzULy8t1lNU-2ukE1k2OCAzFu3WUcHg==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [],
+  "hostName": "localhost:7071",
+  "instanceId": "0000000000000000000000001893FEDE",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}{
+  "masterKey": {
+    "name": "master",
+    "value": "lx5TM8musq3QYCL-b3x_Pt-s3HdQuU5MHBTrm-7OemFcAzFu--oRkQ==",
+    "encrypted": false
+  },
+  "functionKeys": [
+    {
+      "name": "default",
+      "value": "kFrIv1EiLLgvTAemFNCkOA-KzULy8t1lNU-2ukE1k2OCAzFu3WUcHg==",
+      "encrypted": false
+    }
+  ],
+  "systemKeys": [
+    {
+      "name": "blobs_extension",
+      "value": "Esf8heiCWteE_zEdpvJ3S8AfLlaGxS81xqBrpMMVmfikAzFuzK7J_g==",
+      "encrypted": false
+    }
+  ],
+  "hostName": "localhost:7071",
+  "instanceId": "0000000000000000000000001893FEDE",
+  "source": "runtime",
+  "decryptionKeyId": ""
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2022-07-21T13:16:10.204Z",
+      "EndDate": "2022-07-21T13:16:10.204Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "ON_EXPORT",
+        "ConfigTime": "2022-07-21T13:16:10.204Z",
+        "ConfigUser": "Serck",
+        "FullScale": 100.0,
+        "Fullname": "JSON Export.AIP-001",
+        "HighDesc": "High",
+        "HighHighDesc": "High High",
+        "HighHighLimit": 0.0,
+        "HighHighLimitStd": 0.0,
+        "HighHighLimitTuned": 0.0,
+        "HighHighSeverity": 0,
+        "HighHighSeverityType": "None",
+        "HighHighTuned": false,
+        "HighLimit": 0.0,
+        "HighLimitStd": 0.0,
+        "HighLimitTuned": 0.0,
+        "HighSeverity": 0,
+        "HighSeverityType": "None",
+        "HighTuned": false,
+        "Hysteresis": 0.0,
+        "Id": 20634,
+        "LowDesc": "Low",
+        "LowLimit": 0.0,
+        "LowLimitStd": 0.0,
+        "LowLimitTuned": 0.0,
+        "LowLowDesc": "Low Low",
+        "LowLowLimit": 0.0,
+        "LowLowLimitStd": 0.0,
+        "LowLowLimitTuned": 0.0,
+        "LowLowSeverity": 0,
+        "LowLowSeverityType": "None",
+        "LowLowTuned": false,
+        "LowSeverity": 0,
+        "LowSeverityType": "None",
+        "LowTuned": false,
+        "NoChangeDeadband": 0.0,
+        "NoChangeInterval": 86400,
+        "NoChangeSeverity": "Low",
+        "NoChangeSeverityType": "Alarm",
+        "NoChangeType": "None",
+        "NormalDesc": "Normal",
+        "NormalSeverity": 0,
+        "NormalSeverityType": "None",
+        "OverrangeDesc": "Overrange",
+        "OverrangeSeverity": "High",
+        "OverrangeSeverityType": "Alarm",
+        "TunedTime": "1601-01-01T00:00:00.000Z",
+        "TunedUser": "",
+        "TuningAllowed": false,
+        "TypeName": "CPointAlgManual",
+        "UnderrangeDesc": "Underrange",
+        "UnderrangeSeverity": "High",
+        "UnderrangeSeverityType": "Alarm",
+        "Units": "",
+        "ZeroScale": 0.0
+      }
+    ]
+  }
+}﻿{
+  "ExportedConfig": {
+    "Header": {
+      "SystemName": "Main",
+      "StartDate": "2021-11-11T10:23:14.432Z",
+      "EndDate": "2022-08-15T12:14:34.157Z"
+    },
+    "Objects": [
+      {
+        "@RecType": "ON_EXPORT",
+        "ConfigTime": "2021-11-11T10:23:14.432Z",
+        "ConfigUser": "Permits_SuperUser",
+        "FullScale": 999999.0,
+        "Fullname": "Integrated-Fylde DMZ.Warbreck.SR1.Reservoir 1 Compartment 1.Level System 1 - ROC (~C~).Time to Empty (hrs)",
+        "HighDesc": "Filling",
+        "HighHighDesc": "Data Issue",
+        "HighHighLimit": 99999.0,
+        "HighHighLimitStd": 99999.0,
+        "HighHighLimitTuned": 0.0,
+        "HighHighSeverity": "E2",
+        "HighHighSeverityType": "Event",
+        "HighHighTuned": false,
+        "HighLimit": 88888.0,
+        "HighLimitStd": 88888.0,
+        "HighLimitTuned": 0.0,
+        "HighSeverity": "E2",
+        "HighSeverityType": "Event",
+        "HighTuned": false,
+        "Hysteresis": 0.0,
+        "Id": 5449317,
+        "LowDesc": "Emptying",
+        "LowLimit": 1000.0,
+        "LowLimitStd": 1000.0,
+        "LowLimitTuned": 0.0,
+        "LowLowDesc": "Critical",
+        "LowLowLimit": 24.0,
+        "LowLowLimitStd": 24.0,
+        "LowLowLimitTuned": 0.0,
+        "LowLowSeverity": "E2",
+        "LowLowSeverityType": "Event",
+        "LowLowTuned": false,
+        "LowSeverity": "E2",
+        "LowSeverityType": "Event",
+        "LowTuned": false,
+        "NoChangeDeadband": 0.0,
+        "NoChangeInterval": 86400,
+        "NoChangeSeverity": "",
+        "NoChangeSeverityType": "Alarm",
+        "NoChangeType": "None",
+        "NormalDesc": "Steady",
+        "NormalSeverity": "E2",
+        "NormalSeverityType": "Event",
+        "OverrangeDesc": "Overrange",
+        "OverrangeSeverity": "E2",
+        "OverrangeSeverityType": "Event",
+        "StateAreaOfInterest": "East. N",
+        "TunedTime": "1601-01-01T00:00:00.000Z",
+        "TunedUser": "",
+        "TuningAllowed": false,
+        "TypeName": "CPointAlgManual",
+        "UnderrangeDesc": "Empty",
+        "UnderrangeSeverity": "E2",
+        "UnderrangeSeverityType": "Event",
+        "Units": "hrs",
+        "ZeroScale": 0.0,
+        "uu_HISiteName": "",
+        "uu_HITagName": "",
+        "uu_SAPEnableWorkNotif": false
+      },
+      {
+        "@RecType": "ON_EXPORT",
+        "Fullname": "Integrated-Fylde DMZ.Warbreck.SU1.~ Comms.Router LAN Status.Router LAN",
+        "Id": 5449321,
+        "TypeName": "CICMPDigital",
+        "ConfigTime": "2022-08-15T12:14:34.157Z"
+      }
+    ]
+  }
 }
