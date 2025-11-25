@@ -4,27 +4,31 @@ version: 1.0
 date_created: 2025-11-25
 last_updated: 2025-11-25
 owner: Development Team
-status: 'Phase 1 Complete - Domain Layer Implemented'
+status: 'Phase 2 In Progress - Application Layer Services'
 tags: [feature, architecture, ddd, hl7, azure-functions, integration]
 ---
 
 # Introduction
 
-![Status: Planned](https://img.shields.io/badge/status-Planned-blue)
+![Status: In Progress](https://img.shields.io/badge/status-In%20Progress-yellow)
 
 This implementation plan defines the complete architecture and implementation steps for building a Domain-Driven Design (DDD) based lab results processing system. The system processes lab result PDF files uploaded to Azure Blob Storage, extracts metadata, converts data to HL7 v2.5.1 ORU^R01 messages, queues them for processing, and posts to an external NHS Wales endpoint. The implementation follows YAGNI (You Aren't Gonna Need It) and DRY (Don't Repeat Yourself) principles while maintaining clean architecture with Domain, Application, and Infrastructure layers.
+
+**Naming Improvements (2025-11-25)**: Updated Azure Function names for better clarity and maintainability:
+- `FileProcessor` → `LabResultBlobProcessor` (blob-triggered function processing lab result uploads)
+- `TimeTriggeredProcessor` → `PoisonQueueRetryProcessor` (timer-triggered function retrying failed messages)
 
 ## Business Workflow
 
 1. PDF file uploaded to Azure Blob Storage container `lab-results-gateway/`
-2. BlobTrigger Azure Function (FileProcessor) activates
+2. BlobTrigger Azure Function (LabResultBlobProcessor) activates
 3. Extract LabNumber from filename
 4. Fetch lab metadata from external API using LabNumber
 5. Convert lab report data to HL7 v2.5.1 ORU^R01 message (PDF as Base64 in OBX-5)
 6. Submit message to Azure Queue (`lab-reports-queue`)
 7. Queue-triggered HTTP POST to NHS Wales UAT endpoint
 8. Failed messages moved to poison queue (`lab-reports-poison`)
-9. Timer-triggered function (TimeTriggeredProcessor) retries poison queue messages (max 3 attempts)
+10. Timer-triggered function (PoisonQueueRetryProcessor) retries poison queue messages (max 3 attempts)
 10. Structured logging with OpenTelemetry and correlation IDs throughout
 
 ## 1. Requirements & Constraints
