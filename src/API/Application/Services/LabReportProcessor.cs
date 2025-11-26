@@ -1,3 +1,4 @@
+using LabResultsGateway.API.Application.DTOs;
 using LabResultsGateway.API.Domain.Entities;
 using LabResultsGateway.API.Domain.Exceptions;
 using LabResultsGateway.API.Domain.ValueObjects;
@@ -98,12 +99,25 @@ public class LabReportProcessor : ILabReportProcessor
                 "HL7 message built successfully. LabNumber: {LabNumber}, MessageLength: {MessageLength}, CorrelationId: {CorrelationId}",
                 labNumber, hl7Message.Length, correlationId);
 
-            // Step 5: Queue message for processing
+            // Step 5: Create queue message and queue for processing
             _logger.LogInformation(
-                "Queuing HL7 message for processing. LabNumber: {LabNumber}, CorrelationId: {CorrelationId}",
+                "Creating queue message for HL7 processing. LabNumber: {LabNumber}, CorrelationId: {CorrelationId}",
                 labNumber, correlationId);
 
-            await _messageQueueService.SendToProcessingQueueAsync(hl7Message, cancellationToken);
+            var queueMessage = new QueueMessage(
+                hl7Message,
+                correlationId,
+                0,
+                DateTimeOffset.Now,
+                blobName);
+
+            var serializedMessage = await _messageQueueService.SerializeMessageAsync(queueMessage);
+
+            _logger.LogInformation(
+                "Queuing serialized message for processing. LabNumber: {LabNumber}, CorrelationId: {CorrelationId}",
+                labNumber, correlationId);
+
+            await _messageQueueService.SendToProcessingQueueAsync(serializedMessage, cancellationToken);
 
             _logger.LogInformation(
                 "Lab report processing completed successfully. LabNumber: {LabNumber}, CorrelationId: {CorrelationId}",

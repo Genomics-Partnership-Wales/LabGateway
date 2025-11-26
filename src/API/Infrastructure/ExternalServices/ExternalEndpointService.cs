@@ -6,7 +6,7 @@ namespace LabResultsGateway.API.Infrastructure.ExternalServices;
 /// <summary>
 /// Service for posting HL7 messages to the external NHS Wales endpoint.
 /// </summary>
-public class ExternalEndpointService
+public class ExternalEndpointService : IExternalEndpointService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ExternalEndpointService> _logger;

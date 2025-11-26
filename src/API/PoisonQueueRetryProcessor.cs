@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Azure.Storage.Queues;
+using LabResultsGateway.API.Application.DTOs;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Infrastructure.ExternalServices;
 using Microsoft.Azure.Functions.Worker;
@@ -70,23 +71,38 @@ public class PoisonQueueRetryProcessor
         {
             foreach (var message in messages.Value)
             {
-                var correlationId = Guid.NewGuid().ToString();
-
                 using var retryActivity = _activitySource.StartActivity("RetryMessage", ActivityKind.Consumer, activity.Context);
-                retryActivity?.SetTag("correlation.id", correlationId);
+
+                string correlationId = string.Empty;
 
                 try
                 {
-                    // Deserialize message - format TBD based on queue message format decision
-                    // For now, assume plain HL7 string
-                    var hl7Message = message.MessageText;
-                    var retryCount = 0; // Extract from message metadata when format is decided
+                    // Deserialize the queue message
+                    var queueMessage = await _messageQueueService.DeserializeMessageAsync(message.MessageText);
+
+                    correlationId = queueMessage.CorrelationId;
+                    var hl7Message = queueMessage.Hl7Message;
+                    var retryCount = queueMessage.RetryCount;
+
+                    retryActivity?.SetTag("correlation.id", correlationId);
+                    retryActivity?.SetTag("retry.count", retryCount);
 
                     if (retryCount >= 3)
                     {
                         _logger.LogWarning("Message exceeded max retries. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}",
                             correlationId, retryCount);
-                        // Dead letter handling TBD based on dead letter strategy decision
+
+                        // Send to dead letter queue
+                        var deadLetterMessage = new DeadLetterMessage(
+                            hl7Message,
+                            correlationId,
+                            retryCount,
+                            queueMessage.Timestamp,
+                            queueMessage.BlobName,
+                            "Exceeded maximum retry attempts",
+                            DateTimeOffset.UtcNow);
+
+                        await _messageQueueService.SendToDeadLetterQueueAsync(deadLetterMessage, cancellationToken);
                         await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt, cancellationToken);
                         continue;
                     }
@@ -105,8 +121,13 @@ public class PoisonQueueRetryProcessor
                         retryCount++;
                         _logger.LogWarning("Message retry failed. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}, NextRetryIn: {NextRetry} minutes",
                             correlationId, retryCount, Math.Pow(2, retryCount));
+
+                        // Update message with incremented retry count
+                        var updatedMessage = queueMessage with { RetryCount = retryCount };
+                        var serializedMessage = await _messageQueueService.SerializeMessageAsync(updatedMessage);
+
                         var visibilityTimeout = TimeSpan.FromMinutes(Math.Pow(2, retryCount));
-                        await queueClient.UpdateMessageAsync(message.MessageId, message.PopReceipt, visibilityTimeout: visibilityTimeout, cancellationToken: cancellationToken);
+                        await queueClient.UpdateMessageAsync(message.MessageId, message.PopReceipt, messageText: serializedMessage, visibilityTimeout: visibilityTimeout, cancellationToken: cancellationToken);
                         retryActivity?.SetStatus(ActivityStatusCode.Error, "Retry failed");
                     }
                 }

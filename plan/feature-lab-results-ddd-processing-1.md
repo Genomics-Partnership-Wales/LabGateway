@@ -2,9 +2,9 @@
 goal: Implement DDD-based Lab Results Processing System with HL7 v2.5.1 Integration
 version: 1.0
 date_created: 2025-11-25
-last_updated: 2025-11-25
+last_updated: 2025-11-26
 owner: Development Team
-status: 'Implementation Complete - All Phases Finished'
+status: 'Implementation Complete - All Phases Added'
 tags: [feature, architecture, ddd, hl7, azure-functions, integration]
 ---
 
@@ -14,9 +14,19 @@ tags: [feature, architecture, ddd, hl7, azure-functions, integration]
 
 This implementation plan defines the complete architecture and implementation steps for building a Domain-Driven Design (DDD) based lab results processing system. The system processes lab result PDF files uploaded to Azure Blob Storage, extracts metadata, converts data to HL7 v2.5.1 ORU^R01 messages, queues them for processing, and posts to an external NHS Wales endpoint. The implementation follows YAGNI (You Aren't Gonna Need It) and DRY (Don't Repeat Yourself) principles while maintaining clean architecture with Domain, Application, and Infrastructure layers.
 
-**Naming Improvements (2025-11-25)**: Updated Azure Function names for better clarity and maintainability:
-- `FileProcessor` → `LabResultBlobProcessor` (blob-triggered function processing lab result uploads)
-- `TimeTriggeredProcessor` → `PoisonQueueRetryProcessor` (timer-triggered function retrying failed messages)
+**Missing Features Identified (2025-11-26)**: Several critical components are missing from the current implementation:
+- Queue-Triggered Function: Missing the main processing workflow for HL7 messages
+- Queue Message Format: No standardized message structure defined
+- Dead Letter Handling: No strategy for messages exceeding max retries
+- Complete OpenTelemetry Setup: Basic ActivitySource registered but full OTEL configuration missing
+- Polly Resilience Policies: No retry/circuit breaker policies configured for HTTP clients
+
+**All Phases Added (2025-11-26)**: Complete implementation plan now includes all missing features with detailed task breakdowns for:
+- Phase 10: Queue Message Format and Dead Letter Handling
+- Phase 11: Queue-Triggered Function Implementation
+- Updated Phase 4: Complete Dependency Injection and OpenTelemetry Configuration
+- Updated Phase 5: Polly Resilience Policies Implementation
+- Updated Phase 6: Configuration Completion
 
 ## Business Workflow
 
@@ -26,10 +36,13 @@ This implementation plan defines the complete architecture and implementation st
 4. Fetch lab metadata from external API using LabNumber
 5. Convert lab report data to HL7 v2.5.1 ORU^R01 message (PDF as Base64 in OBX-5)
 6. Submit message to Azure Queue (`lab-reports-queue`)
-7. Queue-triggered HTTP POST to NHS Wales UAT endpoint
-8. Failed messages moved to poison queue (`lab-reports-poison`)
-10. Timer-triggered function (PoisonQueueRetryProcessor) retries poison queue messages (max 3 attempts)
-10. Structured logging with OpenTelemetry and correlation IDs throughout
+7. **Queue-Triggered Azure Function (QueueMessageProcessor) activates**
+8. **Deserialize queue message and extract HL7 content**
+9. **POST HL7 message to NHS Wales UAT endpoint**
+10. **On failure, move message to poison queue (`lab-reports-poison`)**
+11. Timer-triggered function (PoisonQueueRetryProcessor) retries poison queue messages (max 3 attempts)
+12. **Messages exceeding max retries moved to dead letter queue**
+13. Structured logging with OpenTelemetry and correlation IDs throughout
 
 ## 1. Requirements & Constraints
 
@@ -46,6 +59,9 @@ This implementation plan defines the complete architecture and implementation st
 - **REQ-009**: System SHALL move failed PDF blobs to `Failed/` subfolder within container
 - **REQ-010**: TimeTriggeredProcessor SHALL poll poison queue every 5 minutes and retry failed messages (max 3 attempts)
 - **REQ-011**: System SHALL track retry count per message and implement exponential backoff
+- **REQ-012**: System SHALL implement Queue-Triggered Azure Function to process messages from `lab-reports-queue`
+- **REQ-013**: System SHALL deserialize queue messages and extract HL7 content for posting
+- **REQ-014**: System SHALL implement dead letter handling for messages exceeding max retry attempts
 
 ### Non-Functional Requirements
 
@@ -59,6 +75,9 @@ This implementation plan defines the complete architecture and implementation st
 - **NFR-008**: System SHALL use IHttpClientFactory with named clients for HTTP operations
 - **NFR-009**: System SHALL be built on .NET 10.0 with Azure Functions v4 isolated worker model
 - **NFR-010**: System SHALL run locally against Azurite storage emulator during development
+- **NFR-011**: System SHALL implement complete OpenTelemetry tracing with Azure Monitor exporter
+- **NFR-012**: System SHALL configure HTTP client instrumentation for distributed tracing
+- **NFR-013**: System SHALL implement standardized queue message format with metadata
 
 ### Security Requirements
 
@@ -133,37 +152,125 @@ This implementation plan defines the complete architecture and implementation st
 | TASK-014 | Define `Application/Services/ILabReportProcessor.cs` orchestration interface with method: `Task ProcessLabReportAsync(string blobName, byte[] pdfContent, CancellationToken cancellationToken = default)` coordinating full workflow: extract LabNumber → fetch metadata → build HL7 → queue message | ✅ | 2025-11-25 |
 | TASK-015 | Implement `Application/Services/LabReportProcessor.cs` orchestration service with constructor injecting ILabMetadataService, IHl7MessageBuilder, IMessageQueueService, ILogger<LabReportProcessor>, implementing ProcessLabReportAsync with try-catch error handling and structured logging | ✅ | 2025-11-25 |
 
-### Implementation Phase 3: Infrastructure Layer Implementations
-
-**GOAL-003**: Implement concrete infrastructure services for external integrations, HL7 generation, Azure Storage operations
-
-| Task | Description | Completed | Date |
-|------|-------------|-----------|------|
-| TASK-016 | Create `src/API/Infrastructure/` folder structure with subfolders: `ExternalServices/`, `Hl7/`, `Messaging/`, `Storage/` | ✅ | 2025-11-26 |
-| TASK-017 | Add NuGet package `NHapi.Base` latest v3.x version supporting .NET 10.0 to `LabResultsGateway.API.csproj` | ✅ | 2025-11-26 |
-| TASK-018 | Add NuGet package `NHapi.Model.V251` latest version to `LabResultsGateway.API.csproj` for HL7 v2.5.1 support | ✅ | 2025-11-26 |
-| TASK-019 | Add NuGet packages for OpenTelemetry: `OpenTelemetry.Extensions.Hosting`, `OpenTelemetry.Instrumentation.Http`, `OpenTelemetry.Exporter.AzureMonitor` latest versions to `LabResultsGateway.API.csproj` | ✅ | 2025-11-26 |
-| TASK-020 | Add NuGet package `Polly` v8.x (resilience framework) to `LabResultsGateway.API.csproj` | ✅ | 2025-11-26 |
-| TASK-021 | Add NuGet package `Azure.Extensions.AspNetCore.Configuration.Secrets` for Key Vault integration to `LabResultsGateway.API.csproj` | ✅ | 2025-11-26 |
-| TASK-022 | Implement `Infrastructure/ExternalServices/LabMetadataApiClient.cs` with constructor injecting IHttpClientFactory (named client "MetadataApi"), IConfiguration for API key/URL, ILogger<LabMetadataApiClient>; implement ILabMetadataService.GetLabMetadataAsync using HttpClient GET /metadata?labNumber={labNumber} with X-API-Key header, deserialize LabMetadataDto, map to LabMetadata ValueObject, handle 404 as MetadataNotFoundException, log request/response with correlation ID | ✅ | 2025-11-26 |
-| TASK-023 | Implement `Infrastructure/Hl7/Hl7MessageBuilder.cs` with constructor injecting IConfiguration for MSH segment values, ILogger<Hl7MessageBuilder>; implement IHl7MessageBuilder.BuildOruR01Message using NHapi PipeParser and ORU_R01 message structure, populate MSH segment (MSH-3 from config, MSH-4 from config, MSH-5 from config, MSH-6 from config, MSH-7 timestamp, MSH-9 ORU^R01, MSH-10 unique message ID, MSH-11 from config, MSH-12 "2.5.1"), populate PID segment from LabMetadata (PID-3 PatientId, PID-5 Name, PID-7 DOB, PID-8 Gender), populate OBR segment (OBR-4 TestType, OBR-7 CollectionDate), populate OBX segment with OBX-5 containing Base64-encoded PDF, encode message using PipeParser.Encode(), handle exceptions as Hl7GenerationException, log message generation with correlation ID | ✅ | 2025-11-26 |
-| TASK-024 | Implement `Infrastructure/Messaging/AzureQueueService.cs` with constructor injecting QueueServiceClient (via IConfiguration for connection string), IConfiguration for queue names ("ProcessingQueueName", "PoisonQueueName"), ILogger<AzureQueueService>; implement IMessageQueueService.SendToProcessingQueueAsync creating queue if not exists and sending message with Base64 encoding, implement SendToPoisonQueueAsync with retry count metadata, log queue operations with correlation ID | ✅ | 2025-11-26 |
-| TASK-025 | Implement `Infrastructure/Storage/BlobStorageService.cs` with constructor injecting BlobServiceClient (via IConfiguration for connection string), IConfiguration for container name, ILogger<BlobStorageService>; implement IBlobStorageService.MoveToFailedFolderAsync copying blob to "Failed/{originalName}" and deleting original, log move operation with correlation ID | ✅ | 2025-11-26 |
-| TASK-026 | Implement `Infrastructure/ExternalServices/ExternalEndpointService.cs` with constructor injecting IHttpClientFactory (named client "ExternalEndpoint"), IConfiguration for endpoint URL/API key, ILogger<ExternalEndpointService>; define method `Task<bool> PostHl7MessageAsync(string hl7Message, CancellationToken cancellationToken = default)` using HttpClient POST with X-API-Key header and HL7 message as body content (text/plain), return true on success (2xx), false on failure, log request/response with correlation ID | ✅ | 2025-11-26 |
-
 ### Implementation Phase 4: Dependency Injection and OpenTelemetry Configuration
 
-**GOAL-004**: Configure complete DI container, OpenTelemetry tracing, Azure Key Vault integration, and HTTP clients with Polly resilience policies in Program.cs
+**GOAL-004**: Complete dependency injection setup and implement comprehensive OpenTelemetry configuration with Azure Monitor exporter and HTTP instrumentation
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-027 | In `Program.cs` after `builder.ConfigureFunctionsWebApplication()`, add Azure Key Vault configuration provider ONLY if environment variable "KeyVaultUri" exists: `if (!string.IsNullOrEmpty(builder.Configuration["KeyVaultUri"])) { builder.Configuration.AddAzureKeyVault(new Uri(builder.Configuration["KeyVaultUri"]!), new DefaultAzureCredential()); }` | ✅ | 2025-11-26 |
-| TASK-028 | In `Program.cs` register ActivitySource singleton: `builder.Services.AddSingleton(new ActivitySource("LabResultsGateway"))` | ✅ | 2025-11-26 |
-| TASK-029 | In `Program.cs` register HttpClient for metadata API with base address from configuration "MetadataApiUrl" and default X-API-Key header from configuration "MetadataApiKey", add Polly retry policy (3 attempts with exponential backoff: 2s, 4s, 8s) and circuit breaker (break after 5 consecutive failures, 30s duration): `builder.Services.AddHttpClient("MetadataApi", (serviceProvider, client) => { var config = serviceProvider.GetRequiredService<IConfiguration>(); client.BaseAddress = new Uri(config["MetadataApiUrl"]!); client.DefaultRequestHeaders.Add("X-API-Key", config["MetadataApiKey"]!); }).AddStandardResilienceHandler()` | ✅ | 2025-11-26 |
-| TASK-030 | In `Program.cs` register HttpClient for external endpoint with base address from configuration "ExternalEndpointUrl" and default X-API-Key header from configuration "ExternalEndpointApiKey", add Polly retry policy (3 attempts with exponential backoff: 2s, 4s, 8s) and circuit breaker (break after 5 consecutive failures, 30s duration): `builder.Services.AddHttpClient("ExternalEndpoint", (serviceProvider, client) => { var config = serviceProvider.GetRequiredService<IConfiguration>(); client.BaseAddress = new Uri(config["ExternalEndpointUrl"]!); client.DefaultRequestHeaders.Add("X-API-Key", config["ExternalEndpointApiKey"]!); }).AddStandardResilienceHandler()` | ✅ | 2025-11-26 |
-| TASK-031 | In `Program.cs` register Azure Blob Storage client: `builder.Services.AddSingleton(serviceProvider => { var config = serviceProvider.GetRequiredService<IConfiguration>(); return new BlobServiceClient(config["StorageConnection"]!); })` | ✅ | 2025-11-26 |
-| TASK-032 | In `Program.cs` register Azure Queue Storage client: `builder.Services.AddSingleton(serviceProvider => { var config = serviceProvider.GetRequiredService<IConfiguration>(); return new QueueServiceClient(config["StorageConnection"]!); })` | ✅ | 2025-11-26 |
-| TASK-033 | In `Program.cs` register all application services as scoped: `builder.Services.AddScoped<ILabMetadataService, LabMetadataApiClient>(); builder.Services.AddScoped<IHl7MessageBuilder, Hl7MessageBuilder>(); builder.Services.AddScoped<IMessageQueueService, AzureQueueService>(); builder.Services.AddScoped<IBlobStorageService, BlobStorageService>(); builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>(); builder.Services.AddScoped<ExternalEndpointService>();` | ✅ | 2025-11-26 |
+| TASK-027 | In `Program.cs` add OpenTelemetry service registration: `builder.Services.AddOpenTelemetry().WithTracing(tracerProvider => tracerProvider.AddSource("LabResultsGateway").AddAzureMonitorTraceExporter(o => o.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]!));` |  |  |
+| TASK-028 | In `Program.cs` add HTTP client instrumentation: `builder.Services.AddOpenTelemetry().WithTracing(tracerProvider => tracerProvider.AddHttpClientInstrumentation());` |  |  |
+| TASK-029 | In `Program.cs` add Azure Storage instrumentation: `builder.Services.AddOpenTelemetry().WithTracing(tracerProvider => tracerProvider.AddAzureStorageInstrumentation());` |  |  |
+| TASK-030 | In `Program.cs` register ActivitySource as singleton: `builder.Services.AddSingleton(new ActivitySource("LabResultsGateway", "1.0.0"));` |  |  |
+| TASK-031 | In `Program.cs` configure Polly retry policy for MetadataApi HTTP client: `builder.Services.AddHttpClient("MetadataApi").AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>().OrResult(x => !x.IsSuccessStatusCode).RetryAsync(3, (outcome, times) => TimeSpan.FromSeconds(Math.Pow(2, times))));` |  |  |
+| TASK-032 | In `Program.cs` configure Polly circuit breaker policy for ExternalEndpoint HTTP client: `builder.Services.AddHttpClient("ExternalEndpoint").AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>().OrResult(x => !x.IsSuccessStatusCode).CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));` |  |  |
+| TASK-033 | In `Program.cs` add timeout policies to HTTP clients: `builder.Services.AddHttpClient("MetadataApi").ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(30)); builder.Services.AddHttpClient("ExternalEndpoint").ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(60));` |  |  |
+| TASK-034 | In `Program.cs` register all application services as scoped: `builder.Services.AddScoped<ILabMetadataService, LabMetadataApiClient>(); builder.Services.AddScoped<IHl7MessageBuilder, Hl7MessageBuilder>(); builder.Services.AddScoped<IMessageQueueService, AzureQueueService>(); builder.Services.AddScoped<IBlobStorageService, BlobStorageService>(); builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>(); builder.Services.AddScoped<ExternalEndpointService>();` |  |  |
+| TASK-035 | In `Program.cs` add dead letter queue service registration: `builder.Services.AddScoped<IDeadLetterQueueService, DeadLetterQueueService>();` |  |  |
+| TASK-036 | In `Program.cs` add configuration validation: `builder.Services.AddOptions<QueueSettings>().Bind(builder.Configuration.GetSection("QueueSettings")).ValidateDataAnnotations().ValidateOnStart();` |  |  |
+| TASK-024 | Implement `Infrastructure/Messaging/AzureQueueService.cs` with constructor injecting QueueServiceClient (via IConfiguration for connection string), IConfiguration for queue names ("ProcessingQueueName", "PoisonQueueName"), ILogger<AzureQueueService>; implement IMessageQueueService.SendToProcessingQueueAsync creating queue if not exists and sending message with Base64 encoding, implement SendToPoisonQueueAsync with retry count metadata, log queue operations with correlation ID | ✅ | 2025-11-26 |
+| TASK-025 | Implement `Infrastructure/Storage/BlobStorageService.cs` with constructor injecting BlobServiceClient (via IConfiguration for connection string), IConfiguration for container name, ILogger<BlobStorageService>; implement IBlobStorageService.MoveToFailedFolderAsync copying blob to "Failed/{originalName}" and deleting original, log move operation with correlation ID | ✅ | 2025-11-26 |
+### Implementation Phase 4: Dependency Injection and OpenTelemetry Configuration
+
+**GOAL-004**: Complete dependency injection setup and implement comprehensive OpenTelemetry configuration with Azure Monitor exporter and HTTP instrumentation
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-027 | In `Program.cs` add OpenTelemetry service registration: `builder.Services.AddOpenTelemetry().WithTracing(tracerProvider => tracerProvider.AddSource("LabResultsGateway").AddAzureMonitorTraceExporter(o => o.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]!));` |  |  |
+| TASK-028 | In `Program.cs` add HTTP client instrumentation: `builder.Services.AddOpenTelemetry().WithTracing(tracerProvider => tracerProvider.AddHttpClientInstrumentation());` |  |  |
+| TASK-029 | In `Program.cs` add Azure Storage instrumentation: `builder.Services.AddOpenTelemetry().WithTracing(tracerProvider => tracerProvider.AddAzureStorageInstrumentation());` |  |  |
+| TASK-030 | In `Program.cs` register ActivitySource as singleton: `builder.Services.AddSingleton(new ActivitySource("LabResultsGateway", "1.0.0"));` |  |  |
+| TASK-031 | In `Program.cs` configure Polly retry policy for MetadataApi HTTP client: `builder.Services.AddHttpClient("MetadataApi").AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>().OrResult(x => !x.IsSuccessStatusCode).RetryAsync(3, (outcome, times) => TimeSpan.FromSeconds(Math.Pow(2, times))));` |  |  |
+| TASK-032 | In `Program.cs` configure Polly circuit breaker policy for ExternalEndpoint HTTP client: `builder.Services.AddHttpClient("ExternalEndpoint").AddPolicyHandler(Policy<HttpResponseMessage>.Handle<HttpRequestException>().OrResult(x => !x.IsSuccessStatusCode).CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));` |  |  |
+| TASK-033 | In `Program.cs` add timeout policies to HTTP clients: `builder.Services.AddHttpClient("MetadataApi").ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(30)); builder.Services.AddHttpClient("ExternalEndpoint").ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(60));` |  |  |
+| TASK-034 | In `Program.cs` register all application services as scoped: `builder.Services.AddScoped<ILabMetadataService, LabMetadataApiClient>(); builder.Services.AddScoped<IHl7MessageBuilder, Hl7MessageBuilder>(); builder.Services.AddScoped<IMessageQueueService, AzureQueueService>(); builder.Services.AddScoped<IBlobStorageService, BlobStorageService>(); builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>(); builder.Services.AddScoped<ExternalEndpointService>();` |  |  |
+| TASK-035 | In `Program.cs` add dead letter queue service registration: `builder.Services.AddScoped<IDeadLetterQueueService, DeadLetterQueueService>();` |  |  |
+| TASK-036 | In `Program.cs` add configuration validation: `builder.Services.AddOptions<QueueSettings>().Bind(builder.Configuration.GetSection("QueueSettings")).ValidateDataAnnotations().ValidateOnStart();` |  |  |
+
+### Implementation Phase 5: Queue Message Format and Dead Letter Handling
+
+**GOAL-008**: Define standardized queue message structure and implement dead letter processing
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-051 | Define `Application/DTOs/QueueMessage.cs` record with properties: Hl7Message (string), CorrelationId (string), RetryCount (int), Timestamp (DateTimeOffset), BlobName (string) |  |  |
+| TASK-052 | Define `Application/DTOs/DeadLetterMessage.cs` record extending QueueMessage with FailureReason (string), LastAttempt (DateTimeOffset) |  |  |
+| TASK-053 | Update `IMessageQueueService.cs` to include methods: `Task<QueueMessage> DeserializeMessageAsync(string message)`, `Task<string> SerializeMessageAsync(QueueMessage message)`, `Task SendToDeadLetterQueueAsync(DeadLetterMessage message)` |  |  |
+| TASK-054 | Implement dead letter handling in `AzureQueueService.cs` with dead letter queue operations and structured logging |  |  |
+| TASK-055 | Update `PoisonQueueRetryProcessor.cs` to deserialize QueueMessage, track retry count from metadata, implement dead letter logic for max retries exceeded |  |  |
+
+### Implementation Phase 6: Queue-Triggered Function Implementation
+
+**GOAL-009**: Implement the missing queue-triggered Azure Function for processing HL7 messages
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-056 | Create `src/API/QueueMessageProcessor.cs` Azure Function with [QueueTrigger("lab-reports-queue")] attribute |  |  |
+| TASK-057 | Implement message deserialization, correlation ID extraction, and structured logging in QueueMessageProcessor |  |  |
+| TASK-058 | Add HL7 message validation and external endpoint posting logic with proper error handling |  |  |
+| TASK-059 | Implement poison queue routing for failed messages with retry count increment |  |  |
+| TASK-060 | Add OpenTelemetry activity spans and correlation ID propagation in queue processing |  |  |
+
+### Implementation Phase 7: Complete OpenTelemetry Configuration
+
+**GOAL-010**: Complete OpenTelemetry setup with Azure Monitor exporter and HTTP instrumentation
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-061 | Add OpenTelemetry service registration in Program.cs with Azure Monitor exporter configuration |  |  |
+| TASK-062 | Configure HTTP client instrumentation for MetadataApi and ExternalEndpoint named clients |  |  |
+| TASK-063 | Add Azure Storage instrumentation for blob and queue operations |  |  |
+| TASK-064 | Implement baggage propagation for correlation IDs across service boundaries |  |  |
+| TASK-065 | Configure activity source naming and resource attributes for proper telemetry |  |  |
+
+### Implementation Phase 8: Polly Resilience Policies Implementation
+
+**GOAL-011**: Implement comprehensive resilience patterns using Polly v8
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-066 | Configure retry policy with exponential backoff for MetadataApi HTTP client |  |  |
+| TASK-067 | Configure circuit breaker policy for ExternalEndpoint HTTP client with failure threshold |  |  |
+| TASK-068 | Add timeout policies to prevent hanging requests on external APIs |  |  |
+| TASK-069 | Implement bulkhead isolation for concurrent request limiting |  |  |
+| TASK-070 | Add Polly context propagation for distributed tracing integration |  |  |
+
+### Implementation Phase 9: Configuration Completion
+
+**GOAL-012**: Complete all missing configuration values and validation
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-071 | Configure MSH segment values in local.settings.json and document required production values |  |  |
+| TASK-072 | Add dead letter queue name configuration (DeadLetterQueueName) |  |  |
+| TASK-073 | Implement configuration validation in Program.cs startup |  |  |
+| TASK-036 | In `Program.cs` add configuration validation: `builder.Services.AddOptions<QueueSettings>().Bind(builder.Configuration.GetSection("QueueSettings")).ValidateDataAnnotations().ValidateOnStart();` |  |  |
+
+### Implementation Phase 10: Queue Message Format and Dead Letter Handling
+
+**GOAL-013**: Define standardized queue message structure and implement dead letter processing
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-075 | Implement `Application/DTOs/QueueMessage.cs` record with properties: Hl7Message (string), CorrelationId (string), RetryCount (int), Timestamp (DateTimeOffset), BlobName (string) |  |  |
+| TASK-076 | Implement `Application/DTOs/DeadLetterMessage.cs` record extending QueueMessage with FailureReason (string), LastAttempt (DateTimeOffset) |  |  |
+| TASK-077 | Update `IMessageQueueService.cs` to include methods: `Task<QueueMessage> DeserializeMessageAsync(string message)`, `Task<string> SerializeMessageAsync(QueueMessage message)`, `Task SendToDeadLetterQueueAsync(DeadLetterMessage message)` |  |  |
+| TASK-078 | Implement `Infrastructure/Messaging/DeadLetterQueueService.cs` with constructor injecting BlobServiceClient, IConfiguration for dead letter container name, ILogger<DeadLetterQueueService>; implement IDeadLetterQueueService.SaveToDeadLetterAsync saving DeadLetterMessage as JSON blob with timestamp filename |  |  |
+| TASK-079 | Update `AzureQueueService.cs` to implement JSON serialization for QueueMessage and DeadLetterMessage, update SendToPoisonQueueAsync to serialize QueueMessage with retry count, implement DeserializeMessageAsync to parse JSON and extract HL7 message and metadata |  |  |
+| TASK-080 | Update `TimeTriggeredProcessor.cs` to deserialize QueueMessage from poison queue, track retry count from metadata, implement dead letter logic for max retries exceeded (move to dead letter blob storage) |  |  |
+
+### Implementation Phase 11: Queue-Triggered Function Implementation
+
+**GOAL-014**: Implement the missing queue-triggered Azure Function for processing HL7 messages
+
+| Task | Description | Completed | Date |
+|------|-------------|-----------|------|
+| TASK-081 | Create `src/API/QueueMessageProcessor.cs` Azure Function with [QueueTrigger("lab-reports-queue")] attribute and QueueMessage parameter |  |  |
+| TASK-082 | Implement message deserialization in QueueMessageProcessor, extract HL7 message, correlation ID, and metadata from QueueMessage |  |  |
+| TASK-083 | Add OpenTelemetry activity spans in QueueMessageProcessor with correlation ID propagation and structured logging |  |  |
+| TASK-084 | Implement HL7 message validation and external endpoint posting logic with proper error handling in QueueMessageProcessor |  |  |
+| TASK-085 | Implement poison queue routing for failed messages with retry count increment in QueueMessageProcessor |  |  |
+| TASK-086 | Add comprehensive error handling and dead letter queue integration in QueueMessageProcessor |  |  |
 
 ### Implementation Phase 5: FileProcessor Azure Function Refactoring
 
@@ -282,6 +389,10 @@ This implementation plan defines the complete architecture and implementation st
 - **FILE-017**: `src/API/Infrastructure/Storage/BlobStorageService.cs` - Azure Blob Storage service implementation for moving failed blobs
 - **FILE-018**: `src/API/Infrastructure/ExternalServices/ExternalEndpointService.cs` - HTTP client for NHS Wales endpoint with retry logic
 - **FILE-019**: `docs/KEYVAULT-SETUP.md` - Documentation for Azure Key Vault production setup and configuration
+- **FILE-020**: `src/API/Application/DTOs/QueueMessage.cs` - DTO for standardized queue message format with HL7 content and metadata
+- **FILE-021**: `src/API/Application/DTOs/DeadLetterMessage.cs` - DTO for dead letter messages with failure information
+- **FILE-022**: `src/API/QueueMessageProcessor.cs` - Queue-triggered Azure Function for processing HL7 messages
+- **FILE-023**: `src/API/Infrastructure/Messaging/DeadLetterQueueService.cs` - Service for handling dead letter queue operations
 
 ### Files to Modify
 
@@ -310,6 +421,9 @@ This implementation plan defines the complete architecture and implementation st
 - **TEST-010**: **Full workflow with in-memory services** - Create test lab report, run through LabReportProcessor with in-memory implementations of all services, verify HL7 message generated correctly, verify message queued, verify no exceptions thrown
 - **TEST-011**: **TimeTriggeredProcessor retry logic** - Seed Azurite poison queue with test messages (varying retry counts), run TimeTriggeredProcessor, mock ExternalEndpointService (return success/failure), verify messages deleted on success, verify retry count incremented on failure, verify dead letter handling after 3 retries
 - **TEST-012**: **OpenTelemetry tracing** - Execute FileProcessor with ActivityListener, verify Activity created with name "ProcessLabReport", verify correlation ID tag present, verify child Activities for metadata fetch and HL7 generation, verify Activity status set correctly on success/failure
+- **TEST-013**: **QueueMessageProcessor end-to-end** - Send test message to lab-reports-queue, verify QueueMessageProcessor triggers, mock ExternalEndpointService, verify message processed or moved to poison queue, verify structured logging and telemetry
+- **TEST-014**: **Queue message serialization** - Test QueueMessage DTO serialization/deserialization, verify HL7 content preserved, verify metadata fields (correlation ID, retry count, timestamp) correctly handled
+- **TEST-015**: **Dead letter handling** - Test dead letter queue operations, verify messages exceeding max retries moved to dead letter queue with proper failure metadata
 
 ### Manual Testing Checklist
 
@@ -341,6 +455,14 @@ This implementation plan defines the complete architecture and implementation st
 
 - **RISK-009**: **Correlation ID propagation** - Correlation IDs may not propagate correctly through all layers causing difficulty in distributed tracing. MITIGATION: Use OpenTelemetry Activity.Current throughout, log correlation ID at every stage, include correlation ID in all exceptions, test end-to-end tracing with multiple concurrent requests.
 
+- **RISK-010**: **Missing Queue-Triggered Function** - Current implementation lacks the critical QueueMessageProcessor function, preventing HL7 message processing workflow completion. MITIGATION: Implement QueueMessageProcessor.cs with proper error handling and poison queue routing.
+
+- **RISK-011**: **Undefined Queue Message Format** - No standardized message structure defined, leading to inconsistent serialization/deserialization and retry count tracking issues. MITIGATION: Define QueueMessage DTO with HL7 content, metadata, and retry tracking fields.
+
+- **RISK-012**: **Incomplete OpenTelemetry Setup** - Basic ActivitySource registered but full OTEL configuration missing, impacting observability and debugging capabilities. MITIGATION: Complete OTEL setup with Azure Monitor exporter and HTTP instrumentation.
+
+- **RISK-013**: **Missing Polly Resilience Policies** - No retry/circuit breaker policies configured for HTTP clients, reducing system resilience to transient failures. MITIGATION: Configure Polly policies with exponential backoff and circuit breaker patterns.
+
 ### Assumptions
 
 - **ASSUMPTION-001**: **Metadata API availability** - Assume metadata API is available during development and testing, returns consistent JSON structure, has reasonable SLA for production use.
@@ -363,6 +485,10 @@ This implementation plan defines the complete architecture and implementation st
 
 - **ASSUMPTION-010**: **Retry logic sufficient** - Assume 3 retry attempts with exponential backoff (2min, 4min, 8min) is sufficient for most transient failures, permanent failures acceptable to move to dead letter after 3 attempts.
 
+- **ASSUMPTION-011**: **Queue Message Format** - Assume JSON wrapper format for queue messages with HL7 content, metadata, and retry tracking will be implemented for better traceability.
+
+- **ASSUMPTION-012**: **Dead Letter Strategy** - Assume dead letter messages will be moved to permanent storage for manual investigation rather than requiring complex reprocessing logic.
+
 ## 8. Related Specifications / Further Reading
 
 - [OWASP Top 10 Security](https://owasp.org/www-project-top-ten/) - Security best practices referenced in SEC requirements
@@ -374,6 +500,9 @@ This implementation plan defines the complete architecture and implementation st
 - [Domain-Driven Design Reference](https://www.domainlanguage.com/ddd/reference/) - Eric Evans DDD patterns and terminology
 - [Azure Key Vault Configuration Provider](https://learn.microsoft.com/en-us/azure/key-vault/general/tutorial-net-create-vault-azure-web-app) - Guide for Key Vault integration with .NET apps
 - [Azure Storage Queue Best Practices](https://learn.microsoft.com/en-us/azure/storage/queues/storage-queues-introduction) - Queue storage patterns and limitations
+- [Azure Functions Queue Triggers](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue) - Queue-triggered function implementation guide
+- [Polly Resilience Patterns](https://www.pollydocs.org/) - Circuit breaker and retry policy implementation
+- [OpenTelemetry Azure Monitor Exporter](https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Exporter.AzureMonitor) - Azure Monitor integration for distributed tracing
 
 ---
 
@@ -390,3 +519,13 @@ This implementation plan defines the complete architecture and implementation st
 5. **LabNumber Filename Pattern** - What exact pattern/format is the LabNumber in the PDF filename? (e.g., `{LabNumber}.pdf`, `LAB-{LabNumber}-{date}.pdf`, prefix/suffix rules)
 
 6. **PDF File Size Limits** - What is maximum expected PDF file size? Need to validate against Azure Queue message size limit (64KB) or Azure Service Bus if larger messages required.
+
+**New Questions (2025-11-26)**:
+
+7. **Queue-Triggered Function Implementation** - Should the QueueMessageProcessor function be implemented as a separate Azure Function project or integrated into the existing LabResultsGateway.API project?
+
+8. **OpenTelemetry Configuration** - What specific Azure Monitor connection string format should be used for the OTEL exporter in production environments?
+
+9. **Polly Policy Configuration** - What specific retry intervals and circuit breaker thresholds should be used for the external API calls (MetadataApi and ExternalEndpoint)?
+
+10. **Dead Letter Queue Naming** - What should be the naming convention for the dead letter queue (e.g., `lab-reports-dead-letter` or `lab-reports-dlq`)?

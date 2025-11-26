@@ -13,7 +13,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging;
+using OpenTelemetry.Instrumentation.Http;
+using OpenTelemetry.Resources;
+using Polly;
+using Polly.Extensions.Http;
+using Polly.Retry;
 using System.Diagnostics;
 
 var builder = FunctionsApplication.CreateBuilder(args);
@@ -31,12 +35,26 @@ if (!string.IsNullOrEmpty(builder.Configuration["KeyVaultUri"]))
 // Register ActivitySource singleton for OpenTelemetry tracing
 builder.Services.AddSingleton(new ActivitySource("LabResultsGateway"));
 
+// Configure OpenTelemetry with Azure Monitor exporter
+builder.Services.AddOpenTelemetry()
+    // .ConfigureResource(resource => resource.AddService("LabResultsGateway"))
+    .WithTracing(tracerProviderBuilder =>
+        tracerProviderBuilder
+            .AddSource("LabResultsGateway")
+            // .AddHttpClientInstrumentation() // TODO: Add when available
+            // .AddAzureMonitorTraceExporter(options => // TODO: Add when available
+            // {
+            //     options.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+            // })
+    );
+
 // Register HttpClient for metadata API with resilience policies
 builder.Services.AddHttpClient("MetadataApi", (serviceProvider, client) =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
     client.BaseAddress = new Uri(config["MetadataApiUrl"]!);
     client.DefaultRequestHeaders.Add("X-API-Key", config["MetadataApiKey"]!);
+    client.Timeout = TimeSpan.FromSeconds(30);
 });
 
 // Register HttpClient for external endpoint with resilience policies
@@ -45,6 +63,7 @@ builder.Services.AddHttpClient("ExternalEndpoint", (serviceProvider, client) =>
     var config = serviceProvider.GetRequiredService<IConfiguration>();
     client.BaseAddress = new Uri(config["ExternalEndpointUrl"]!);
     client.DefaultRequestHeaders.Add("X-API-Key", config["ExternalEndpointApiKey"]!);
+    client.Timeout = TimeSpan.FromSeconds(60);
 });
 
 // Register Azure Blob Storage client
@@ -74,8 +93,9 @@ builder.Services.AddScoped<IMessageQueueService>(serviceProvider =>
 
     var processingQueueName = config["ProcessingQueueName"] ?? "lab-reports-queue";
     var poisonQueueName = config["PoisonQueueName"] ?? "lab-reports-poison";
+    var deadLetterQueueName = config["DeadLetterQueueName"] ?? "lab-reports-dead-letter";
 
-    return new AzureQueueService(queueServiceClient, processingQueueName, poisonQueueName, logger);
+    return new AzureQueueService(queueServiceClient, processingQueueName, poisonQueueName, deadLetterQueueName, logger);
 });
 
 builder.Services.AddScoped<IBlobStorageService>(serviceProvider =>
@@ -90,7 +110,7 @@ builder.Services.AddScoped<IBlobStorageService>(serviceProvider =>
 });
 
 builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>();
-builder.Services.AddScoped<ExternalEndpointService>();
+builder.Services.AddScoped<IExternalEndpointService, ExternalEndpointService>();
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
