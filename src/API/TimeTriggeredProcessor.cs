@@ -1,26 +1,124 @@
-using System;
+using System.Diagnostics;
+using Azure.Storage.Queues;
+using LabResultsGateway.API.Application.Services;
+using LabResultsGateway.API.Infrastructure.ExternalServices;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace LabResultsGateway.API;
 
-public class TimeTriggeredProcessor
+/// <summary>
+/// Azure Function that retries failed HL7 messages from the poison queue.
+/// Renamed from TimeTriggeredProcessor to PoisonQueueRetryProcessor for clarity.
+/// </summary>
+public class PoisonQueueRetryProcessor
 {
-    private readonly ILogger _logger;
+    private readonly IMessageQueueService _messageQueueService;
+    private readonly ExternalEndpointService _externalEndpointService;
+    private readonly IConfiguration _configuration;
+    private readonly ActivitySource _activitySource;
+    private readonly ILogger<PoisonQueueRetryProcessor> _logger;
 
-    public TimeTriggeredProcessor(ILoggerFactory loggerFactory)
+    /// <summary>
+    /// Initializes a new instance of the PoisonQueueRetryProcessor class.
+    /// </summary>
+    /// <param name="messageQueueService">Service for queue operations.</param>
+    /// <param name="externalEndpointService">Service for posting to external endpoint.</param>
+    /// <param name="configuration">Configuration for queue names and settings.</param>
+    /// <param name="activitySource">Activity source for OpenTelemetry tracing.</param>
+    /// <param name="logger">Logger for tracking operations.</param>
+    public PoisonQueueRetryProcessor(
+        IMessageQueueService messageQueueService,
+        ExternalEndpointService externalEndpointService,
+        IConfiguration configuration,
+        ActivitySource activitySource,
+        ILogger<PoisonQueueRetryProcessor> logger)
     {
-        _logger = loggerFactory.CreateLogger<TimeTriggeredProcessor>();
+        _messageQueueService = messageQueueService ?? throw new ArgumentNullException(nameof(messageQueueService));
+        _externalEndpointService = externalEndpointService ?? throw new ArgumentNullException(nameof(externalEndpointService));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    [Function("TimeTriggeredProcessor")]
-    public void Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer)
+    /// <summary>
+    /// Processes messages from the poison queue and retries failed deliveries.
+    /// Runs every 5 minutes.
+    /// </summary>
+    /// <param name="myTimer">Timer trigger information.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    [Function("PoisonQueueRetryProcessor")]
+    public async Task Run(
+        [TimerTrigger("0 */5 * * * *")] TimerInfo myTimer,
+        CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("C# Timer trigger function executed at: {executionTime}", DateTime.Now);
-        
-        if (myTimer.ScheduleStatus is not null)
+        using var activity = _activitySource.StartActivity("RetryPoisonQueue", ActivityKind.Consumer);
+
+        _logger.LogInformation("Poison queue retry processor starting at: {ExecutionTime}", DateTime.UtcNow);
+
+        var queueServiceClient = new QueueServiceClient(_configuration["StorageConnection"]!);
+        var queueClient = queueServiceClient.GetQueueClient(_configuration["PoisonQueueName"]!);
+        await queueClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+
+        var messages = await queueClient.ReceiveMessagesAsync(maxMessages: 10, visibilityTimeout: TimeSpan.FromMinutes(5), cancellationToken: cancellationToken);
+
+        _logger.LogInformation("Retrieved {MessageCount} messages from poison queue", messages.Value?.Length ?? 0);
+        activity?.SetTag("message.count", messages.Value?.Length ?? 0);
+
+        if (messages.Value is not null)
         {
-            _logger.LogInformation("Next timer schedule at: {nextSchedule}", myTimer.ScheduleStatus.Next);
+            foreach (var message in messages.Value)
+            {
+                var correlationId = Guid.NewGuid().ToString();
+
+                using var retryActivity = _activitySource.StartActivity("RetryMessage", ActivityKind.Consumer, activity.Context);
+                retryActivity?.SetTag("correlation.id", correlationId);
+
+                try
+                {
+                    // Deserialize message - format TBD based on queue message format decision
+                    // For now, assume plain HL7 string
+                    var hl7Message = message.MessageText;
+                    var retryCount = 0; // Extract from message metadata when format is decided
+
+                    if (retryCount >= 3)
+                    {
+                        _logger.LogWarning("Message exceeded max retries. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}",
+                            correlationId, retryCount);
+                        // Dead letter handling TBD based on dead letter strategy decision
+                        await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt, cancellationToken);
+                        continue;
+                    }
+
+                    var success = await _externalEndpointService.PostHl7MessageAsync(hl7Message, cancellationToken);
+
+                    if (success)
+                    {
+                        _logger.LogInformation("Message retry successful. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}",
+                            correlationId, retryCount);
+                        await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt, cancellationToken);
+                        retryActivity?.SetStatus(ActivityStatusCode.Ok);
+                    }
+                    else
+                    {
+                        retryCount++;
+                        _logger.LogWarning("Message retry failed. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}, NextRetryIn: {NextRetry} minutes",
+                            correlationId, retryCount, Math.Pow(2, retryCount));
+                        var visibilityTimeout = TimeSpan.FromMinutes(Math.Pow(2, retryCount));
+                        await queueClient.UpdateMessageAsync(message.MessageId, message.PopReceipt, visibilityTimeout: visibilityTimeout, cancellationToken: cancellationToken);
+                        retryActivity?.SetStatus(ActivityStatusCode.Error, "Retry failed");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error processing poison queue message. CorrelationId: {CorrelationId}", correlationId);
+                    retryActivity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                }
+            }
         }
+
+        _logger.LogInformation("Poison queue retry processor completed at: {ExecutionTime}", DateTime.UtcNow);
+        activity?.SetStatus(ActivityStatusCode.Ok);
     }
 }

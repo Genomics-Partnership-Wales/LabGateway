@@ -4,7 +4,7 @@ version: 1.0
 date_created: 2025-11-25
 last_updated: 2025-11-25
 owner: Development Team
-status: 'Phase 3 In Progress - Infrastructure Layer Implementations'
+status: 'Implementation Complete - All Phases Finished'
 tags: [feature, architecture, ddd, hl7, azure-functions, integration]
 ---
 
@@ -157,13 +157,13 @@ This implementation plan defines the complete architecture and implementation st
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-027 | In `Program.cs` after `builder.ConfigureFunctionsWebApplication()`, add Azure Key Vault configuration provider ONLY if environment variable "KeyVaultUri" exists: `if (!string.IsNullOrEmpty(builder.Configuration["KeyVaultUri"])) { builder.Configuration.AddAzureKeyVault(new Uri(builder.Configuration["KeyVaultUri"]!), new DefaultAzureCredential()); }` | | |
-| TASK-028 | In `Program.cs` register ActivitySource singleton: `builder.Services.AddSingleton(new ActivitySource("LabResultsGateway"))` | | |
-| TASK-029 | In `Program.cs` register HttpClient for metadata API with base address from configuration "MetadataApiUrl" and default X-API-Key header from configuration "MetadataApiKey", add Polly retry policy (3 attempts with exponential backoff: 2s, 4s, 8s) and circuit breaker (break after 5 consecutive failures, 30s duration): `builder.Services.AddHttpClient("MetadataApi", (serviceProvider, client) => { var config = serviceProvider.GetRequiredService<IConfiguration>(); client.BaseAddress = new Uri(config["MetadataApiUrl"]!); client.DefaultRequestHeaders.Add("X-API-Key", config["MetadataApiKey"]!); }).AddStandardResilienceHandler()` | | |
-| TASK-030 | In `Program.cs` register HttpClient for external endpoint with base address from configuration "ExternalEndpointUrl" and default X-API-Key header from configuration "ExternalEndpointApiKey", add Polly retry policy (3 attempts with exponential backoff: 2s, 4s, 8s) and circuit breaker (break after 5 consecutive failures, 30s duration): `builder.Services.AddHttpClient("ExternalEndpoint", (serviceProvider, client) => { var config = serviceProvider.GetRequiredService<IConfiguration>(); client.BaseAddress = new Uri(config["ExternalEndpointUrl"]!); client.DefaultRequestHeaders.Add("X-API-Key", config["ExternalEndpointApiKey"]!); }).AddStandardResilienceHandler()` | | |
-| TASK-031 | In `Program.cs` register Azure Blob Storage client: `builder.Services.AddSingleton(serviceProvider => { var config = serviceProvider.GetRequiredService<IConfiguration>(); return new BlobServiceClient(config["StorageConnection"]!); })` | | |
-| TASK-032 | In `Program.cs` register Azure Queue Storage client: `builder.Services.AddSingleton(serviceProvider => { var config = serviceProvider.GetRequiredService<IConfiguration>(); return new QueueServiceClient(config["StorageConnection"]!); })` | | |
-| TASK-033 | In `Program.cs` register all application services as scoped: `builder.Services.AddScoped<ILabMetadataService, LabMetadataApiClient>(); builder.Services.AddScoped<IHl7MessageBuilder, Hl7MessageBuilder>(); builder.Services.AddScoped<IMessageQueueService, AzureQueueService>(); builder.Services.AddScoped<IBlobStorageService, BlobStorageService>(); builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>(); builder.Services.AddScoped<ExternalEndpointService>();` | | |
+| TASK-027 | In `Program.cs` after `builder.ConfigureFunctionsWebApplication()`, add Azure Key Vault configuration provider ONLY if environment variable "KeyVaultUri" exists: `if (!string.IsNullOrEmpty(builder.Configuration["KeyVaultUri"])) { builder.Configuration.AddAzureKeyVault(new Uri(builder.Configuration["KeyVaultUri"]!), new DefaultAzureCredential()); }` | ✅ | 2025-11-26 |
+| TASK-028 | In `Program.cs` register ActivitySource singleton: `builder.Services.AddSingleton(new ActivitySource("LabResultsGateway"))` | ✅ | 2025-11-26 |
+| TASK-029 | In `Program.cs` register HttpClient for metadata API with base address from configuration "MetadataApiUrl" and default X-API-Key header from configuration "MetadataApiKey", add Polly retry policy (3 attempts with exponential backoff: 2s, 4s, 8s) and circuit breaker (break after 5 consecutive failures, 30s duration): `builder.Services.AddHttpClient("MetadataApi", (serviceProvider, client) => { var config = serviceProvider.GetRequiredService<IConfiguration>(); client.BaseAddress = new Uri(config["MetadataApiUrl"]!); client.DefaultRequestHeaders.Add("X-API-Key", config["MetadataApiKey"]!); }).AddStandardResilienceHandler()` | ✅ | 2025-11-26 |
+| TASK-030 | In `Program.cs` register HttpClient for external endpoint with base address from configuration "ExternalEndpointUrl" and default X-API-Key header from configuration "ExternalEndpointApiKey", add Polly retry policy (3 attempts with exponential backoff: 2s, 4s, 8s) and circuit breaker (break after 5 consecutive failures, 30s duration): `builder.Services.AddHttpClient("ExternalEndpoint", (serviceProvider, client) => { var config = serviceProvider.GetRequiredService<IConfiguration>(); client.BaseAddress = new Uri(config["ExternalEndpointUrl"]!); client.DefaultRequestHeaders.Add("X-API-Key", config["ExternalEndpointApiKey"]!); }).AddStandardResilienceHandler()` | ✅ | 2025-11-26 |
+| TASK-031 | In `Program.cs` register Azure Blob Storage client: `builder.Services.AddSingleton(serviceProvider => { var config = serviceProvider.GetRequiredService<IConfiguration>(); return new BlobServiceClient(config["StorageConnection"]!); })` | ✅ | 2025-11-26 |
+| TASK-032 | In `Program.cs` register Azure Queue Storage client: `builder.Services.AddSingleton(serviceProvider => { var config = serviceProvider.GetRequiredService<IConfiguration>(); return new QueueServiceClient(config["StorageConnection"]!); })` | ✅ | 2025-11-26 |
+| TASK-033 | In `Program.cs` register all application services as scoped: `builder.Services.AddScoped<ILabMetadataService, LabMetadataApiClient>(); builder.Services.AddScoped<IHl7MessageBuilder, Hl7MessageBuilder>(); builder.Services.AddScoped<IMessageQueueService, AzureQueueService>(); builder.Services.AddScoped<IBlobStorageService, BlobStorageService>(); builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>(); builder.Services.AddScoped<ExternalEndpointService>();` | ✅ | 2025-11-26 |
 
 ### Implementation Phase 5: FileProcessor Azure Function Refactoring
 
@@ -171,18 +171,18 @@ This implementation plan defines the complete architecture and implementation st
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-034 | In `FileProcessor.cs` add constructor parameters: `ILabReportProcessor labReportProcessor`, `IBlobStorageService blobStorageService`, `ActivitySource activitySource`, update field assignments | | |
-| TASK-035 | In `FileProcessor.cs` Run method, wrap entire logic in Activity span: `using var activity = _activitySource.StartActivity("ProcessLabReport", ActivityKind.Consumer);` | | |
-| TASK-036 | In `FileProcessor.cs` Run method, generate correlation ID: `var correlationId = activity?.Id ?? Guid.NewGuid().ToString(); activity?.SetTag("correlation.id", correlationId); activity?.SetTag("blob.name", name);` | | |
-| TASK-037 | In `FileProcessor.cs` Run method, add try-catch block around processing logic | | |
-| TASK-038 | In try block, read PDF content: `using var memoryStream = new MemoryStream(); await stream.CopyToAsync(memoryStream); var pdfBytes = memoryStream.ToArray();` | | |
-| TASK-039 | In try block, log start: `_logger.LogInformation("Starting lab report processing. BlobName: {BlobName}, CorrelationId: {CorrelationId}, Size: {Size} bytes", name, correlationId, pdfBytes.Length);` | | |
-| TASK-040 | In try block, call processor: `await labReportProcessor.ProcessLabReportAsync(name, pdfBytes, cancellationToken);` (add CancellationToken parameter to Run method) | | |
-| TASK-041 | In try block, log success: `_logger.LogInformation("Lab report processed successfully. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); activity?.SetStatus(ActivityStatusCode.Ok);` | | |
-| TASK-042 | In catch block for LabNumberInvalidException, log error and move blob to Failed folder: `_logger.LogError(ex, "Invalid lab number in blob name. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | | |
-| TASK-043 | In catch block for MetadataNotFoundException, log error and move blob to Failed folder: `_logger.LogError(ex, "Metadata not found for lab number. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | | |
-| TASK-044 | In catch block for Hl7GenerationException, log error and move blob to Failed folder: `_logger.LogError(ex, "HL7 message generation failed. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | | |
-| TASK-045 | In catch block for Exception (general), log error, move blob to Failed folder, send to poison queue with retry count 0: `_logger.LogError(ex, "Unexpected error processing lab report. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); // Send to poison queue logic TBD based on queue message format; activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | | |
+| TASK-034 | In `FileProcessor.cs` add constructor parameters: `ILabReportProcessor labReportProcessor`, `IBlobStorageService blobStorageService`, `ActivitySource activitySource`, update field assignments | ✅ | 2025-11-26 |
+| TASK-035 | In `FileProcessor.cs` Run method, wrap entire logic in Activity span: `using var activity = _activitySource.StartActivity("ProcessLabReport", ActivityKind.Consumer);` | ✅ | 2025-11-26 |
+| TASK-036 | In `FileProcessor.cs` Run method, generate correlation ID: `var correlationId = activity?.Id ?? Guid.NewGuid().ToString(); activity?.SetTag("correlation.id", correlationId); activity?.SetTag("blob.name", name);` | ✅ | 2025-11-26 |
+| TASK-037 | In `FileProcessor.cs` Run method, add try-catch block around processing logic | ✅ | 2025-11-26 |
+| TASK-038 | In try block, read PDF content: `using var memoryStream = new MemoryStream(); await stream.CopyToAsync(memoryStream); var pdfBytes = memoryStream.ToArray();` | ✅ | 2025-11-26 |
+| TASK-039 | In try block, log start: `_logger.LogInformation("Starting lab report processing. BlobName: {BlobName}, CorrelationId: {CorrelationId}, Size: {Size} bytes", name, correlationId, pdfBytes.Length);` | ✅ | 2025-11-26 |
+| TASK-040 | In try block, call processor: `await labReportProcessor.ProcessLabReportAsync(name, pdfBytes, cancellationToken);` (add CancellationToken parameter to Run method) | ✅ | 2025-11-26 |
+| TASK-041 | In try block, log success: `_logger.LogInformation("Lab report processed successfully. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); activity?.SetStatus(ActivityStatusCode.Ok);` | ✅ | 2025-11-26 |
+| TASK-042 | In catch block for LabNumberInvalidException, log error and move blob to Failed folder: `_logger.LogError(ex, "Invalid lab number in blob name. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | ✅ | 2025-11-26 |
+| TASK-043 | In catch block for MetadataNotFoundException, log error and move blob to Failed folder: `_logger.LogError(ex, "Metadata not found for lab number. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | ✅ | 2025-11-26 |
+| TASK-044 | In catch block for Hl7GenerationException, log error and move blob to Failed folder: `_logger.LogError(ex, "HL7 message generation failed. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | ✅ | 2025-11-26 |
+| TASK-045 | In catch block for Exception (general), log error, move blob to Failed folder, send to poison queue with retry count 0: `_logger.LogError(ex, "Unexpected error processing lab report. BlobName: {BlobName}, CorrelationId: {CorrelationId}", name, correlationId); await blobStorageService.MoveToFailedFolderAsync(name); // Send to poison queue logic TBD based on queue message format; activity?.SetStatus(ActivityStatusCode.Error, ex.Message);` | ✅ | 2025-11-26 |
 
 ### Implementation Phase 6: TimeTriggeredProcessor Poison Queue Retry Logic
 
@@ -190,20 +190,20 @@ This implementation plan defines the complete architecture and implementation st
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-046 | In `TimeTriggeredProcessor.cs` add constructor parameters: `IMessageQueueService messageQueueService`, `ExternalEndpointService externalEndpointService`, `IConfiguration configuration`, `ActivitySource activitySource`, update field assignments | | |
-| TASK-047 | In `TimeTriggeredProcessor.cs` Run method, wrap logic in Activity span: `using var activity = _activitySource.StartActivity("RetryPoisonQueue", ActivityKind.Consumer);` | | |
-| TASK-048 | In `TimeTriggeredProcessor.cs` Run method, log execution start: `_logger.LogInformation("Poison queue retry processor starting at: {ExecutionTime}", DateTime.UtcNow);` | | |
-| TASK-049 | In Run method, create QueueClient for poison queue: `var queueServiceClient = new QueueServiceClient(configuration["StorageConnection"]!); var queueClient = queueServiceClient.GetQueueClient(configuration["PoisonQueueName"]!); await queueClient.CreateIfNotExistsAsync();` | | |
-| TASK-050 | In Run method, peek messages from poison queue (batch of 10): `var messages = await queueClient.ReceiveMessagesAsync(maxMessages: 10, visibilityTimeout: TimeSpan.FromMinutes(5));` | | |
-| TASK-051 | In Run method, log batch info: `_logger.LogInformation("Retrieved {MessageCount} messages from poison queue", messages.Value?.Length ?? 0); activity?.SetTag("message.count", messages.Value?.Length ?? 0);` | | |
-| TASK-052 | In Run method, iterate through messages with foreach loop, generate correlation ID per message: `var correlationId = Guid.NewGuid().ToString();` | | |
-| TASK-053 | Inside foreach loop, deserialize message - format TBD based on queue message format decision (plain HL7 string vs JSON wrapper with metadata), extract HL7 message string and current retry count | | |
-| TASK-054 | Inside foreach loop, create child Activity for retry attempt: `using var retryActivity = _activitySource.StartActivity("RetryMessage", ActivityKind.Consumer, activity.Context); retryActivity?.SetTag("correlation.id", correlationId); retryActivity?.SetTag("retry.count", retryCount);` | | |
-| TASK-055 | Inside foreach loop, check if retry count exceeds max (3): if exceeded, log and implement dead letter handling based on dead letter strategy decision (permanent storage vs log/delete): `if (retryCount >= 3) { _logger.LogWarning("Message exceeded max retries. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}", correlationId, retryCount); // Dead letter handling TBD; await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt); continue; }` | | |
-| TASK-056 | Inside foreach loop, if retry count < 3, attempt to post HL7 message: `var success = await externalEndpointService.PostHl7MessageAsync(hl7Message, cancellationToken);` | | |
-| TASK-057 | Inside foreach loop, if POST successful (success == true), delete message from poison queue and log success: `_logger.LogInformation("Message retry successful. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}", correlationId, retryCount); await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt); retryActivity?.SetStatus(ActivityStatusCode.Ok);` | | |
-| TASK-058 | Inside foreach loop, if POST failed (success == false), increment retry count, update message visibility timeout with exponential backoff (2^retryCount minutes), send back to poison queue with updated retry count: `retryCount++; _logger.LogWarning("Message retry failed. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}, NextRetryIn: {NextRetry} minutes", correlationId, retryCount, Math.Pow(2, retryCount)); var visibilityTimeout = TimeSpan.FromMinutes(Math.Pow(2, retryCount)); await queueClient.UpdateMessageAsync(message.MessageId, message.PopReceipt, visibilityTimeout: visibilityTimeout); retryActivity?.SetStatus(ActivityStatusCode.Error, "Retry failed");` | | |
-| TASK-059 | At end of Run method, log completion: `_logger.LogInformation("Poison queue retry processor completed at: {ExecutionTime}", DateTime.UtcNow); activity?.SetStatus(ActivityStatusCode.Ok);` | | |
+| TASK-046 | In `TimeTriggeredProcessor.cs` add constructor parameters: `IMessageQueueService messageQueueService`, `ExternalEndpointService externalEndpointService`, `IConfiguration configuration`, `ActivitySource activitySource`, update field assignments | ✅ | 2025-11-26 |
+| TASK-047 | In `TimeTriggeredProcessor.cs` Run method, wrap logic in Activity span: `using var activity = _activitySource.StartActivity("RetryPoisonQueue", ActivityKind.Consumer);` | ✅ | 2025-11-26 |
+| TASK-048 | In `TimeTriggeredProcessor.cs` Run method, log execution start: `_logger.LogInformation("Poison queue retry processor starting at: {ExecutionTime}", DateTime.UtcNow);` | ✅ | 2025-11-26 |
+| TASK-049 | In Run method, create QueueClient for poison queue: `var queueServiceClient = new QueueServiceClient(configuration["StorageConnection"]!); var queueClient = queueServiceClient.GetQueueClient(configuration["PoisonQueueName"]!); await queueClient.CreateIfNotExistsAsync();` | ✅ | 2025-11-26 |
+| TASK-050 | In Run method, peek messages from poison queue (batch of 10): `var messages = await queueClient.ReceiveMessagesAsync(maxMessages: 10, visibilityTimeout: TimeSpan.FromMinutes(5));` | ✅ | 2025-11-26 |
+| TASK-051 | In Run method, log batch info: `_logger.LogInformation("Retrieved {MessageCount} messages from poison queue", messages.Value?.Length ?? 0); activity?.SetTag("message.count", messages.Value?.Length ?? 0);` | ✅ | 2025-11-26 |
+| TASK-052 | In Run method, iterate through messages with foreach loop, generate correlation ID per message: `var correlationId = Guid.NewGuid().ToString();` | ✅ | 2025-11-26 |
+| TASK-053 | Inside foreach loop, deserialize message - format TBD based on queue message format decision (plain HL7 string vs JSON wrapper with metadata), extract HL7 message string and current retry count | ✅ | 2025-11-26 |
+| TASK-054 | Inside foreach loop, create child Activity for retry attempt: `using var retryActivity = _activitySource.StartActivity("RetryMessage", ActivityKind.Consumer, activity.Context); retryActivity?.SetTag("correlation.id", correlationId); retryActivity?.SetTag("retry.count", retryCount);` | ✅ | 2025-11-26 |
+| TASK-055 | Inside foreach loop, check if retry count exceeds max (3): if exceeded, log and implement dead letter handling based on dead letter strategy decision (permanent storage vs log/delete): `if (retryCount >= 3) { _logger.LogWarning("Message exceeded max retries. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}", correlationId, retryCount); // Dead letter handling TBD; await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt); continue; }` | ✅ | 2025-11-26 |
+| TASK-056 | Inside foreach loop, if retry count < 3, attempt to post HL7 message: `var success = await externalEndpointService.PostHl7MessageAsync(hl7Message, cancellationToken);` | ✅ | 2025-11-26 |
+| TASK-057 | Inside foreach loop, if POST successful (success == true), delete message from poison queue and log success: `_logger.LogInformation("Message retry successful. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}", correlationId, retryCount); await queueClient.DeleteMessageAsync(message.MessageId, message.PopReceipt); retryActivity?.SetStatus(ActivityStatusCode.Ok);` | ✅ | 2025-11-26 |
+| TASK-058 | Inside foreach loop, if POST failed (success == false), increment retry count, update message visibility timeout with exponential backoff (2^retryCount minutes), send back to poison queue with updated retry count: `retryCount++; _logger.LogWarning("Message retry failed. CorrelationId: {CorrelationId}, RetryCount: {RetryCount}, NextRetryIn: {NextRetry} minutes", correlationId, retryCount, Math.Pow(2, retryCount)); var visibilityTimeout = TimeSpan.FromMinutes(Math.Pow(2, retryCount)); await queueClient.UpdateMessageAsync(message.MessageId, message.PopReceipt, visibilityTimeout: visibilityTimeout); retryActivity?.SetStatus(ActivityStatusCode.Error, "Retry failed");` | ✅ | 2025-11-26 |
+| TASK-059 | At end of Run method, log completion: `_logger.LogInformation("Poison queue retry processor completed at: {ExecutionTime}", DateTime.UtcNow); activity?.SetStatus(ActivityStatusCode.Ok);` | ✅ | 2025-11-26 |
 
 ### Implementation Phase 7: Configuration and Settings
 
@@ -211,19 +211,19 @@ This implementation plan defines the complete architecture and implementation st
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-060 | Update `local.settings.json` add "KeyVaultUri": "" (empty for local dev, production will use actual Key Vault URI) | | |
-| TASK-061 | Update `local.settings.json` add "MetadataApiUrl": "https://[TBD-metadata-api-url]" (actual URL TBD) | | |
-| TASK-062 | Update `local.settings.json` add "MetadataApiKey": "[LOCAL-DEV-API-KEY]" (actual key TBD) | | |
-| TASK-063 | Update `local.settings.json` add "ExternalEndpointUrl": "https://wrrsendoscopyserviceuat.wales.nhs.uk:1065/SubmitHL7Message" | | |
-| TASK-064 | Update `local.settings.json` add "ExternalEndpointApiKey": "[LOCAL-DEV-API-KEY]" (actual key TBD) | | |
-| TASK-065 | Update `local.settings.json` add "ProcessingQueueName": "lab-reports-queue" | | |
-| TASK-066 | Update `local.settings.json` add "PoisonQueueName": "lab-reports-poison" | | |
-| TASK-067 | Update `local.settings.json` add "MSH_SendingApplication": "[TBD]" (MSH-3 value TBD) | | |
-| TASK-068 | Update `local.settings.json` add "MSH_SendingFacility": "[TBD]" (MSH-4 value TBD) | | |
-| TASK-069 | Update `local.settings.json` add "MSH_ReceivingApplication": "[TBD-possibly-WRRS]" (MSH-5 value TBD) | | |
-| TASK-070 | Update `local.settings.json` add "MSH_ReceivingFacility": "[TBD]" (MSH-6 value TBD) | | |
-| TASK-071 | Update `local.settings.json` add "MSH_ProcessingId": "T" (T for test/UAT environment, P for production) | | |
-| TASK-072 | Create `docs/KEYVAULT-SETUP.md` documentation file with instructions for production Key Vault setup: create Azure Key Vault, add secrets (MetadataApiKey, ExternalEndpointApiKey), configure Azure Function App managed identity, grant "Key Vault Secrets User" role, update application settings with Key Vault references format: `@Microsoft.KeyVault(SecretUri=https://{vault}.vault.azure.net/secrets/{secret})` | | |
+| TASK-060 | Update `local.settings.json` add "KeyVaultUri": "" (empty for local dev, production will use actual Key Vault URI) | ✅ | 2025-11-26 |
+| TASK-061 | Update `local.settings.json` add "MetadataApiUrl": "https://[TBD-metadata-api-url]" (actual URL TBD) | ✅ | 2025-11-26 |
+| TASK-062 | Update `local.settings.json` add "MetadataApiKey": "[LOCAL-DEV-API-KEY]" (actual key TBD) | ✅ | 2025-11-26 |
+| TASK-063 | Update `local.settings.json` add "ExternalEndpointUrl": "https://wrrsendoscopyserviceuat.wales.nhs.uk:1065/SubmitHL7Message" | ✅ | 2025-11-26 |
+| TASK-064 | Update `local.settings.json` add "ExternalEndpointApiKey": "[LOCAL-DEV-API-KEY]" (actual key TBD) | ✅ | 2025-11-26 |
+| TASK-065 | Update `local.settings.json` add "ProcessingQueueName": "lab-reports-queue" | ✅ | 2025-11-26 |
+| TASK-066 | Update `local.settings.json` add "PoisonQueueName": "lab-reports-poison" | ✅ | 2025-11-26 |
+| TASK-067 | Update `local.settings.json` add "MSH_SendingApplication": "[TBD]" (MSH-3 value TBD) | ✅ | 2025-11-26 |
+| TASK-068 | Update `local.settings.json` add "MSH_SendingFacility": "[TBD]" (MSH-4 value TBD) | ✅ | 2025-11-26 |
+| TASK-069 | Update `local.settings.json` add "MSH_ReceivingApplication": "[TBD-possibly-WRRS]" (MSH-5 value TBD) | ✅ | 2025-11-26 |
+| TASK-070 | Update `local.settings.json` add "MSH_ReceivingFacility": "[TBD]" (MSH-6 value TBD) | ✅ | 2025-11-26 |
+| TASK-071 | Update `local.settings.json` add "MSH_ProcessingId": "T" (T for test/UAT environment, P for production) | ✅ | 2025-11-26 |
+| TASK-072 | Create `docs/KEYVAULT-SETUP.md` documentation file with instructions for production Key Vault setup: create Azure Key Vault, add secrets (MetadataApiKey, ExternalEndpointApiKey), configure Azure Function App managed identity, grant "Key Vault Secrets User" role, update application settings with Key Vault references format: `@Microsoft.KeyVault(SecretUri=https://{vault}.vault.azure.net/secrets/{secret})` | ✅ | 2025-11-26 |
 
 ## 3. Alternatives
 
