@@ -81,7 +81,6 @@ public class LabReportProcessor : ILabReportProcessor
                 labNumber: labNumber,
                 pdfContent: pdfContent,
                 metadata: metadata,
-                createdAt: DateTimeOffset.UtcNow,
                 correlationId: correlationId);
 
             _logger.LogInformation(
@@ -149,16 +148,16 @@ public class LabReportProcessor : ILabReportProcessor
     /// <exception cref="LabNumberInvalidException">Thrown when LabNumber cannot be extracted or is invalid.</exception>
     private static LabNumber ExtractLabNumberFromBlobName(string blobName)
     {
+        // Extract lab number from filename (remove extension and path)
+        var fileName = Path.GetFileNameWithoutExtension(blobName);
+
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            throw new LabNumberInvalidException("", "Blob name does not contain a valid filename.");
+        }
+
         try
         {
-            // Extract lab number from filename (remove extension and path)
-            var fileName = Path.GetFileNameWithoutExtension(blobName);
-
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                throw new LabNumberInvalidException("Blob name does not contain a valid filename.");
-            }
-
             // Create LabNumber value object (will validate format)
             return new LabNumber(fileName);
         }
@@ -168,7 +167,7 @@ public class LabReportProcessor : ILabReportProcessor
         }
         catch (Exception ex)
         {
-            throw new LabNumberInvalidException($"Failed to extract lab number from blob name '{blobName}': {ex.Message}", ex);
+            throw new LabNumberInvalidException(fileName, $"Failed to extract lab number from blob name '{blobName}': {ex.Message}");
         }
     }
 }
