@@ -16,7 +16,7 @@ namespace LabResultsGateway.API;
 public class PoisonQueueRetryProcessor
 {
     private readonly IMessageQueueService _messageQueueService;
-    private readonly ExternalEndpointService _externalEndpointService;
+    private readonly IExternalEndpointService _externalEndpointService;
     private readonly IConfiguration _configuration;
     private readonly ActivitySource _activitySource;
     private readonly ILogger<PoisonQueueRetryProcessor> _logger;
@@ -31,7 +31,7 @@ public class PoisonQueueRetryProcessor
     /// <param name="logger">Logger for tracking operations.</param>
     public PoisonQueueRetryProcessor(
         IMessageQueueService messageQueueService,
-        ExternalEndpointService externalEndpointService,
+        IExternalEndpointService externalEndpointService,
         IConfiguration configuration,
         ActivitySource activitySource,
         ILogger<PoisonQueueRetryProcessor> logger)
