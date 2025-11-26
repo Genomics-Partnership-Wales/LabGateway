@@ -157,9 +157,13 @@ This implementation plan addresses all missing features identified in the codeba
 - **RISK-002**: OpenTelemetry configuration may impact cold start performance of Azure Functions
 - **ASSUMPTION-002**: Polly policies are compatible with Azure Functions isolated worker model
 
-## 8. Related Specifications / Further Reading
+## 9. Runtime Setup Notes
 
-- [OpenTelemetry .NET Documentation](https://opentelemetry.io/docs/net/)
-- [Polly Resilience Patterns](https://github.com/App-vNext/Polly)
-- [Azure Functions Queue Triggers](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue)
-- [HL7 v2.5.1 ORU^R01 Specification](https://www.hl7.org/implement/standards/product_brief.cfm?product_id=144)
+**Azurite Local Storage Emulator**: The application requires Azurite to be running for local development. Start it with:
+```bash
+npx azurite --silent --location .
+```
+
+This will start the blob and queue storage emulators on localhost:10000 and localhost:10001 respectively, using the existing `__azurite_db_*.json` files in the workspace root.
+
+**Configuration**: All required configurations have been added to `local.settings.json`. For production, ensure Key Vault is configured and environment variables are set appropriately.

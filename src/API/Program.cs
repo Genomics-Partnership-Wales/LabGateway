@@ -41,11 +41,11 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
         tracerProviderBuilder
             .AddSource("LabResultsGateway")
-            // .AddHttpClientInstrumentation() // TODO: Add when available
-            // .AddAzureMonitorTraceExporter(options => // TODO: Add when available
-            // {
-            //     options.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-            // })
+    // .AddHttpClientInstrumentation() // TODO: Add when available
+    // .AddAzureMonitorTraceExporter(options => // TODO: Add when available
+    // {
+    //     options.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+    // })
     );
 
 // Register HttpClient for metadata API with resilience policies
