@@ -1,0 +1,72 @@
+{
+  "labNumber": "LAB005",
+  "specimenId": "SPEC-2025-005",
+  "collectionDate": "2025-11-25T20:15:30Z",
+  "receivedDate": "2025-11-25T20:45:00Z",
+  "completedDate": "2025-11-25T23:30:15Z",
+  "testType": "Emergency Panel",
+  "testCode": "EMERGENCY",
+  "priority": "STAT",
+  "results": [
+    {
+      "testName": "Troponin I",
+      "testCode": "TROP",
+      "value": "0.8",
+      "unit": "ng/mL",
+      "referenceRange": "<0.04",
+      "abnormalFlag": "HH",
+      "status": "F",
+      "critical": true,
+      "notes": "CRITICAL VALUE - Physician notified at 23:35"
+    },
+    {
+      "testName": "D-Dimer",
+      "testCode": "DDIMER",
+      "value": "1200",
+      "unit": "ng/mL",
+      "referenceRange": "<500",
+      "abnormalFlag": "H",
+      "status": "F"
+    },
+    {
+      "testName": "BNP",
+      "testCode": "BNP",
+      "value": "450",
+      "unit": "pg/mL",
+      "referenceRange": "<100",
+      "abnormalFlag": "H",
+      "status": "F"
+    },
+    {
+      "testName": "Potassium",
+      "testCode": "K",
+      "value": "5.8",
+      "unit": "mmol/L",
+      "referenceRange": "3.5-5.0",
+      "abnormalFlag": "H",
+      "status": "F",
+      "critical": true,
+      "notes": "CRITICAL VALUE - Physician notified at 23:32"
+    },
+    {
+      "testName": "Lactate",
+      "testCode": "LACT",
+      "value": "3.5",
+      "unit": "mmol/L",
+      "referenceRange": "0.5-2.2",
+      "abnormalFlag": "H",
+      "status": "F"
+    }
+  ],
+  "orderingPhysician": {
+    "name": "Dr. Amanda Taylor",
+    "npi": "1112223334",
+    "facility": "Emergency Department - City Hospital"
+  },
+  "performingLab": {
+    "name": "City Hospital Laboratory",
+    "clia": "11D2223334",
+    "address": "999 Emergency Blvd, Medical Center, MC 99999"
+  },
+  "comments": "STAT processing. Critical values called to Dr. Taylor. Patient in ER."
+}

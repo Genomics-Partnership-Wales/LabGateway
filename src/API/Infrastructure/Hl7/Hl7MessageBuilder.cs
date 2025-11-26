@@ -2,6 +2,8 @@ using System.Text;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Domain.Entities;
 using LabResultsGateway.API.Domain.Exceptions;
+using LabResultsGateway.API.Domain.ValueObjects;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NHapi.Base.Parser;
 using NHapi.Model.V251.Message;
@@ -164,11 +166,17 @@ public class Hl7MessageBuilder : IHl7MessageBuilder
         // OBX-2: Value Type (ED for Encapsulated Data)
         obx.ValueType.Value = "ED";
 
-        // OBX-5: Observation Value (Base64-encoded PDF)
+        // OBX-5: Observation Value (Base64-encoded PDF as ED type)
         var base64Pdf = Convert.ToBase64String(labReport.PdfContent);
-        obx.GetObservationValue(0).DataSubtype.Value = "PDF";
-        obx.GetObservationValue(0).Encoding.Value = "Base64";
-        obx.GetObservationValue(0).Data.Value = base64Pdf;
+        var ed = obx.GetObservationValue(0).Data as NHapi.Model.V251.Datatype.ED;
+        if (ed != null)
+        {
+            ed.SourceApplication.NamespaceID.Value = "LABGATEWAY";
+            ed.TypeOfData.Value = "PDF";
+            ed.DataSubtype.Value = "PDF";
+            ed.Encoding.Value = "Base64";
+            ed.Data.Value = base64Pdf;
+        }
 
         // OBX-11: Observation Result Status (F for Final)
         obx.ObservationResultStatus.Value = "F";

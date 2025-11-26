@@ -1,0 +1,51 @@
+{
+  "labNumber": "LAB004",
+  "specimenId": "SPEC-2025-004",
+  "collectionDate": "2025-11-25T07:30:00Z",
+  "receivedDate": "2025-11-25T08:15:00Z",
+  "completedDate": "2025-11-25T11:45:30Z",
+  "testType": "Thyroid Function Panel",
+  "testCode": "THYROID",
+  "results": [
+    {
+      "testName": "TSH",
+      "testCode": "TSH",
+      "value": "2.5",
+      "unit": "mIU/L",
+      "referenceRange": "0.4-4.0",
+      "abnormalFlag": "N",
+      "status": "F",
+      "notes": "Normal thyroid function"
+    },
+    {
+      "testName": "Free T4",
+      "testCode": "FT4",
+      "value": "1.2",
+      "unit": "ng/dL",
+      "referenceRange": "0.8-1.8",
+      "abnormalFlag": "N",
+      "status": "C",
+      "notes": "Corrected value - originally reported as 1.8"
+    },
+    {
+      "testName": "Free T3",
+      "testCode": "FT3",
+      "value": "3.1",
+      "unit": "pg/mL",
+      "referenceRange": "2.3-4.2",
+      "abnormalFlag": "N",
+      "status": "F"
+    }
+  ],
+  "orderingPhysician": {
+    "name": "Dr. James Wilson",
+    "npi": "5555666777",
+    "facility": "Endocrine Specialty Clinic"
+  },
+  "performingLab": {
+    "name": "Specialty Lab Inc",
+    "clia": "55D7778889",
+    "address": "789 Science Park, Research City, RC 11111"
+  },
+  "comments": "Free T4 result corrected due to calibration adjustment"
+}

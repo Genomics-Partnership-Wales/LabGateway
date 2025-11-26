@@ -5,6 +5,7 @@ using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Domain.Entities;
 using LabResultsGateway.API.Domain.Exceptions;
 using LabResultsGateway.API.Domain.ValueObjects;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace LabResultsGateway.API.Infrastructure.ExternalServices;
@@ -74,14 +75,16 @@ public class LabMetadataApiClient : ILabMetadataService
             }
 
             // Map DTO to domain value object
-            var labMetadata = new LabMetadata(
-                patientId: labMetadataDto.PatientId,
-                firstName: labMetadataDto.FirstName,
-                lastName: labMetadataDto.LastName,
-                dateOfBirth: labMetadataDto.DateOfBirth,
-                gender: labMetadataDto.Gender,
-                testType: labMetadataDto.TestType,
-                collectionDate: labMetadataDto.CollectionDate);
+            var labMetadata = new LabMetadata
+            {
+                PatientId = labMetadataDto.PatientId,
+                FirstName = labMetadataDto.FirstName,
+                LastName = labMetadataDto.LastName,
+                DateOfBirth = labMetadataDto.DateOfBirth,
+                Gender = labMetadataDto.Gender,
+                TestType = labMetadataDto.TestType,
+                CollectionDate = new DateTimeOffset(labMetadataDto.CollectionDate)
+            };
 
             _logger.LogInformation("Successfully retrieved lab metadata for LabNumber: {LabNumber}, PatientId: {PatientId}",
                 labNumber, labMetadata.PatientId);

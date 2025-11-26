@@ -1,0 +1,57 @@
+{
+  "labNumber": "LAB001",
+  "specimenId": "SPEC-2025-001",
+  "collectionDate": "2025-11-25T14:30:22Z",
+  "receivedDate": "2025-11-25T15:45:00Z",
+  "completedDate": "2025-11-25T18:20:15Z",
+  "testType": "Complete Blood Count",
+  "testCode": "CBC",
+  "results": [
+    {
+      "testName": "White Blood Cell Count",
+      "testCode": "WBC",
+      "value": "7.5",
+      "unit": "10^3/uL",
+      "referenceRange": "4.5-11.0",
+      "abnormalFlag": "N",
+      "status": "F"
+    },
+    {
+      "testName": "Red Blood Cell Count",
+      "testCode": "RBC",
+      "value": "4.8",
+      "unit": "10^6/uL",
+      "referenceRange": "4.5-5.9",
+      "abnormalFlag": "N",
+      "status": "F"
+    },
+    {
+      "testName": "Hemoglobin",
+      "testCode": "HGB",
+      "value": "14.2",
+      "unit": "g/dL",
+      "referenceRange": "13.5-17.5",
+      "abnormalFlag": "N",
+      "status": "F"
+    },
+    {
+      "testName": "Platelet Count",
+      "testCode": "PLT",
+      "value": "250",
+      "unit": "10^3/uL",
+      "referenceRange": "150-400",
+      "abnormalFlag": "N",
+      "status": "F"
+    }
+  ],
+  "orderingPhysician": {
+    "name": "Dr. Sarah Johnson",
+    "npi": "1234567890",
+    "facility": "City Medical Center"
+  },
+  "performingLab": {
+    "name": "Quest Diagnostics",
+    "clia": "22D1234567",
+    "address": "123 Lab Street, Medical City, MC 12345"
+  }
+}

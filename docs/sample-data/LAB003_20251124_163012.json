@@ -1,0 +1,53 @@
+{
+  "labNumber": "LAB003",
+  "specimenId": "SPEC-2025-003",
+  "collectionDate": "2025-11-24T16:30:12Z",
+  "completedDate": "2025-11-24T20:15:00Z",
+  "testType": "Lipid Panel",
+  "testCode": "LIPID",
+  "results": [
+    {
+      "testName": "Total Cholesterol",
+      "testCode": "CHOL",
+      "value": "195",
+      "unit": "mg/dL",
+      "referenceRange": "<200",
+      "abnormalFlag": "N",
+      "status": "F"
+    },
+    {
+      "testName": "HDL Cholesterol",
+      "testCode": "HDL",
+      "value": "55",
+      "unit": "mg/dL",
+      "referenceRange": ">40",
+      "abnormalFlag": "N",
+      "status": "F"
+    },
+    {
+      "testName": "LDL Cholesterol",
+      "testCode": "LDL",
+      "value": "115",
+      "unit": "mg/dL",
+      "referenceRange": "<100",
+      "abnormalFlag": "H",
+      "status": "F"
+    },
+    {
+      "testName": "Triglycerides",
+      "testCode": "TRIG",
+      "value": "125",
+      "unit": "mg/dL",
+      "referenceRange": "<150",
+      "abnormalFlag": "N",
+      "status": "F"
+    }
+  ],
+  "orderingPhysician": {
+    "name": "Dr. Emily Rodriguez"
+  },
+  "performingLab": {
+    "name": "Local Lab Services",
+    "clia": "44D5551234"
+  }
+}

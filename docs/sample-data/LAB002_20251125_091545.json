@@ -1,0 +1,66 @@
+{
+  "labNumber": "LAB002",
+  "specimenId": "SPEC-2025-002",
+  "collectionDate": "2025-11-25T09:15:45Z",
+  "receivedDate": "2025-11-25T10:00:00Z",
+  "completedDate": "2025-11-25T13:30:22Z",
+  "testType": "Comprehensive Metabolic Panel",
+  "testCode": "CMP",
+  "results": [
+    {
+      "testName": "Glucose",
+      "testCode": "GLU",
+      "value": "145",
+      "unit": "mg/dL",
+      "referenceRange": "70-100",
+      "abnormalFlag": "H",
+      "status": "F"
+    },
+    {
+      "testName": "Blood Urea Nitrogen",
+      "testCode": "BUN",
+      "value": "28",
+      "unit": "mg/dL",
+      "referenceRange": "7-20",
+      "abnormalFlag": "H",
+      "status": "F"
+    },
+    {
+      "testName": "Creatinine",
+      "testCode": "CREAT",
+      "value": "1.8",
+      "unit": "mg/dL",
+      "referenceRange": "0.7-1.3",
+      "abnormalFlag": "H",
+      "status": "F"
+    },
+    {
+      "testName": "Sodium",
+      "testCode": "NA",
+      "value": "140",
+      "unit": "mmol/L",
+      "referenceRange": "136-145",
+      "abnormalFlag": "N",
+      "status": "F"
+    },
+    {
+      "testName": "Potassium",
+      "testCode": "K",
+      "value": "4.2",
+      "unit": "mmol/L",
+      "referenceRange": "3.5-5.0",
+      "abnormalFlag": "N",
+      "status": "F"
+    }
+  ],
+  "orderingPhysician": {
+    "name": "Dr. Michael Chen",
+    "npi": "9876543210",
+    "facility": "Regional Hospital"
+  },
+  "performingLab": {
+    "name": "LabCorp",
+    "clia": "33D9876543",
+    "address": "456 Testing Ave, Lab Town, LT 67890"
+  }
+}

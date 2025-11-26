@@ -141,7 +141,7 @@ public class LabReportProcessor : ILabReportProcessor
 
     /// <summary>
     /// Extracts the LabNumber from the blob name.
-    /// Assumes the blob name format is "{labNumber}.pdf" or similar pattern.
+    /// Assumes the blob name format is "{labNumber}_{date}_{time}.{extension}" or similar pattern.
     /// </summary>
     /// <param name="blobName">The blob name to extract LabNumber from.</param>
     /// <returns>The extracted LabNumber value object.</returns>
@@ -156,10 +156,20 @@ public class LabReportProcessor : ILabReportProcessor
             throw new LabNumberInvalidException("", "Blob name does not contain a valid filename.");
         }
 
+        // Split by underscore and take the first part as lab number
+        // Format: LAB003_20251124_163012 -> LAB003
+        var parts = fileName.Split('_');
+        if (parts.Length == 0 || string.IsNullOrWhiteSpace(parts[0]))
+        {
+            throw new LabNumberInvalidException(fileName, "Blob name does not contain a valid lab number prefix.");
+        }
+
+        var labNumberString = parts[0];
+
         try
         {
             // Create LabNumber value object (will validate format)
-            return new LabNumber(fileName);
+            return new LabNumber(labNumberString);
         }
         catch (LabNumberInvalidException)
         {
@@ -167,7 +177,7 @@ public class LabReportProcessor : ILabReportProcessor
         }
         catch (Exception ex)
         {
-            throw new LabNumberInvalidException(fileName, $"Failed to extract lab number from blob name '{blobName}': {ex.Message}");
+            throw new LabNumberInvalidException(labNumberString, $"Failed to extract lab number from blob name '{blobName}': {ex.Message}");
         }
     }
 }
