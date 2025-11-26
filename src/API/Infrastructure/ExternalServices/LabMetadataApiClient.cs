@@ -91,9 +91,14 @@ public class LabMetadataApiClient : ILabMetadataService
 
             return labMetadata;
         }
-        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (MetadataNotFoundException)
         {
-            // Re-throw MetadataNotFoundException for 404s
+            // Re-throw domain exception without wrapping
+            throw;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "HTTP request failed for LabNumber: {LabNumber}", labNumber);
             throw;
         }
         catch (Exception ex)

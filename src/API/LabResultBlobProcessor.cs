@@ -54,6 +54,12 @@ public class LabResultBlobProcessor
         activity?.SetTag("correlation.id", correlationId);
         activity?.SetTag("blob.name", name);
 
+        if (name.StartsWith("Failed/", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInformation("Skipping processing for file in Failed folder: {BlobName}", name);
+            return;
+        }
+
         try
         {
             // Read PDF content from stream
