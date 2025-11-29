@@ -85,13 +85,11 @@ public class PoisonQueueMessageProcessorTests
             _activitySourceMock.Object,
             _loggerMock.Object);
 
-        var message = new QueueMessageDto
-        {
-            CorrelationId = "test-correlation",
-            RetryCount = 1,
-            MessageId = "test-message-id",
-            Hl7Message = "MSH|^~\\&|..."
-        };
+        var message = new QueueMessageWrapper(
+            "test-message-id",
+            "test-pop-receipt",
+            "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":1,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
+            1);
 
         var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
@@ -121,13 +119,11 @@ public class PoisonQueueMessageProcessorTests
             _activitySourceMock.Object,
             _loggerMock.Object);
 
-        var message = new QueueMessageDto
-        {
-            CorrelationId = "test-correlation",
-            RetryCount = 1,
-            MessageId = "test-message-id",
-            Hl7Message = "MSH|^~\\&|..."
-        };
+        var message = new QueueMessageWrapper(
+            "test-message-id",
+            "test-pop-receipt",
+            "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":1,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
+            1);
 
         var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
@@ -157,13 +153,11 @@ public class PoisonQueueMessageProcessorTests
             _activitySourceMock.Object,
             _loggerMock.Object);
 
-        var invalidMessage = new QueueMessageDto
-        {
-            CorrelationId = "test-correlation",
-            RetryCount = 1,
-            MessageId = "test-message-id",
-            Hl7Message = "INVALID_JSON"
-        };
+        var invalidMessage = new QueueMessageWrapper(
+            "test-message-id",
+            "test-pop-receipt",
+            "INVALID_JSON",
+            1);
 
         // Act
         var result = await processor.ProcessMessageAsync(invalidMessage);
@@ -175,8 +169,7 @@ public class PoisonQueueMessageProcessorTests
 
         _messageQueueServiceMock.Verify(
             x => x.SendToDeadLetterQueueAsync(It.Is<DeadLetterMessage>(
-                dlm => dlm.CorrelationId == invalidMessage.CorrelationId &&
-                       dlm.MessageId == invalidMessage.MessageId)),
+                dlm => dlm.MessageId == "test-message-id")),
             Times.Once);
 
         _externalEndpointServiceMock.Verify(x => x.PostHl7MessageAsync(It.IsAny<string>()), Times.Never);
@@ -195,13 +188,11 @@ public class PoisonQueueMessageProcessorTests
             _activitySourceMock.Object,
             _loggerMock.Object);
 
-        var message = new QueueMessageDto
-        {
-            CorrelationId = "test-correlation-123",
-            RetryCount = 2,
-            MessageId = "test-message-456",
-            Hl7Message = "MSH|^~\\&|..."
-        };
+        var message = new QueueMessageWrapper(
+            "test-message-456",
+            "test-pop-receipt",
+            "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation-123\",\"RetryCount\":2,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
+            2);
 
         var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
@@ -239,13 +230,11 @@ public class PoisonQueueMessageProcessorTests
             _activitySourceMock.Object,
             _loggerMock.Object);
 
-        var message = new QueueMessageDto
-        {
-            CorrelationId = "test-correlation",
-            RetryCount = 1,
-            MessageId = "test-message-id",
-            Hl7Message = "MSH|^~\\&|..."
-        };
+        var message = new QueueMessageWrapper(
+            "test-message-id",
+            "test-pop-receipt",
+            "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":1,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
+            1);
 
         var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);

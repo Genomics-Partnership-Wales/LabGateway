@@ -114,7 +114,7 @@ public class PoisonQueueRetryOrchestratorTests
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
                             .ReturnsAsync(messages);
 
-        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageDto>()))
+        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageWrapper>()))
                             .ReturnsAsync(new MessageProcessingResult(true, RetryResult.Success));
 
         // Act
@@ -122,13 +122,13 @@ public class PoisonQueueRetryOrchestratorTests
 
         // Assert
         _messageProcessorMock.Verify(
-            x => x.ProcessMessageAsync(It.Is<QueueMessageDto>(dto => dto.MessageId == "msg1")),
+            x => x.ProcessMessageAsync(It.Is<QueueMessageWrapper>(dto => dto.MessageId == "msg1")),
             Times.Once);
         _messageProcessorMock.Verify(
-            x => x.ProcessMessageAsync(It.Is<QueueMessageDto>(dto => dto.MessageId == "msg2")),
+            x => x.ProcessMessageAsync(It.Is<QueueMessageWrapper>(dto => dto.MessageId == "msg2")),
             Times.Once);
         _messageProcessorMock.Verify(
-            x => x.ProcessMessageAsync(It.Is<QueueMessageDto>(dto => dto.MessageId == "msg3")),
+            x => x.ProcessMessageAsync(It.Is<QueueMessageWrapper>(dto => dto.MessageId == "msg3")),
             Times.Once);
     }
 
@@ -153,7 +153,7 @@ public class PoisonQueueRetryOrchestratorTests
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
                             .ReturnsAsync(messages);
 
-        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageDto>()))
+        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageWrapper>()))
                             .ReturnsAsync(new MessageProcessingResult(true, RetryResult.Success));
 
         // Act
@@ -186,7 +186,7 @@ public class PoisonQueueRetryOrchestratorTests
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
                             .ReturnsAsync(messages);
 
-        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageDto>()))
+        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageWrapper>()))
                             .ReturnsAsync(new MessageProcessingResult(false, RetryResult.Retry));
 
         _retryStrategyMock.Setup(x => x.CalculateNextRetryDelay(It.IsAny<RetryContext>()))
@@ -196,7 +196,7 @@ public class PoisonQueueRetryOrchestratorTests
         await orchestrator.ProcessPoisonQueueAsync(CancellationToken.None);
 
         // Assert
-        _azureQueueClientMock.Verify(x => x.UpdateMessageAsync("msg1", "receipt1", TimeSpan.FromMinutes(4)), Times.Once);
+        _azureQueueClientMock.Verify(x => x.UpdateMessageAsync("msg1", "receipt1", It.IsAny<string>(), TimeSpan.FromMinutes(4)), Times.Once);
         _azureQueueClientMock.Verify(x => x.DeleteMessageAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         _messageQueueServiceMock.Verify(x => x.SendToDeadLetterQueueAsync(It.IsAny<DeadLetterMessage>()), Times.Never);
     }
@@ -222,7 +222,7 @@ public class PoisonQueueRetryOrchestratorTests
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
                             .ReturnsAsync(messages);
 
-        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageDto>()))
+        _messageProcessorMock.Setup(x => x.ProcessMessageAsync(It.IsAny<QueueMessageWrapper>()))
                             .ReturnsAsync(new MessageProcessingResult(false, RetryResult.DeadLetter));
 
         // Act
