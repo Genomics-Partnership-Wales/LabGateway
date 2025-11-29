@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using LabResultsGateway.API.Application.DTOs;
+using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Retry;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Infrastructure.Queue;

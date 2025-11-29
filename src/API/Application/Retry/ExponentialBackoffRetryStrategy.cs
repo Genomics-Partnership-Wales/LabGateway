@@ -1,3 +1,4 @@
+using LabResultsGateway.API.Application.Options;
 using Microsoft.Extensions.Logging;
 
 namespace LabResultsGateway.API.Application.Retry;
