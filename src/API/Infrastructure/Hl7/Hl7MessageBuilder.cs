@@ -45,6 +45,11 @@ public class Hl7MessageBuilder : IHl7MessageBuilder
 
         try
         {
+            // Validate required data
+            ArgumentNullException.ThrowIfNull(labReport.CorrelationId);
+            ArgumentNullException.ThrowIfNull(labReport.Metadata);
+            ArgumentNullException.ThrowIfNull(labReport.PdfContent);
+
             // Create ORU^R01 message
             var oruMessage = new ORU_R01();
 
@@ -167,7 +172,7 @@ public class Hl7MessageBuilder : IHl7MessageBuilder
         obx.ValueType.Value = "ED";
 
         // OBX-5: Observation Value (Base64-encoded PDF as ED type)
-        var base64Pdf = Convert.ToBase64String(labReport.PdfContent);
+        var base64Pdf = Convert.ToBase64String(labReport.PdfContent!);
         var ed = obx.GetObservationValue(0).Data as NHapi.Model.V251.Datatype.ED;
         if (ed != null)
         {

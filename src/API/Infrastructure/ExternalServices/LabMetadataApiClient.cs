@@ -45,8 +45,6 @@ public class LabMetadataApiClient : ILabMetadataService
     /// <exception cref="HttpRequestException">Thrown when the HTTP request fails.</exception>
     public async Task<LabMetadata> GetLabMetadataAsync(LabNumber labNumber, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(labNumber);
-
         var httpClient = _httpClientFactory.CreateClient("MetadataApi");
         var requestUri = $"/metadata?labNumber={labNumber}";
 

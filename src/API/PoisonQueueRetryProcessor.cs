@@ -78,11 +78,23 @@ public class PoisonQueueRetryProcessor
                 try
                 {
                     // Deserialize the queue message
+#pragma warning disable CS8602 // Dereference of a possibly null reference - suppressed as we check for null below
                     var queueMessage = await _messageQueueService.DeserializeMessageAsync(message.MessageText);
+#pragma warning restore CS8602
 
+                    if (queueMessage is null)
+                    {
+                        _logger.LogError("Failed to deserialize queue message. MessageId: {MessageId}", message.MessageId);
+                        retryActivity?.SetStatus(ActivityStatusCode.Error, "Deserialization failed");
+                        continue;
+                    }
+
+                    // At this point, queueMessage is guaranteed to be not null
+#pragma warning disable CS8602 // Dereference of a possibly null reference - suppressed as we check for null above
                     correlationId = queueMessage.CorrelationId;
                     var hl7Message = queueMessage.Hl7Message;
                     var retryCount = queueMessage.RetryCount;
+#pragma warning restore CS8602
 
                     retryActivity?.SetTag("correlation.id", correlationId);
                     retryActivity?.SetTag("retry.count", retryCount);

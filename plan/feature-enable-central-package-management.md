@@ -10,7 +10,7 @@ tags: [feature, upgrade, nuget, cpm, dotnet, architecture]
 
 # Introduction
 
-![Status: Planned](https://img.shields.io/badge/status-Planned-blue)
+![Status: Completed](https://img.shields.io/badge/status-Completed-brightgreen)
 
 This plan details the steps to enable and migrate the LabGateway solution to use NuGet Central Package Management (CPM), ensuring all package versions are managed centrally for consistency, maintainability, and compliance with modern .NET best practices.
 
@@ -44,7 +44,7 @@ This plan details the steps to enable and migrate the LabGateway solution to use
 |-----------|----------------------------------------------------------------------------------------------|-----------|------------|
 | TASK-004  | Remove version attributes from all <PackageReference> in .csproj files                       | ✅ | 2025-11-28 |
 | TASK-005  | Run `dotnet restore` and `dotnet build` to validate migration                                | ✅ | 2025-11-28 |
-| TASK-006  | Update documentation and onboarding guides                                                   |           |            |
+| TASK-006  | Update documentation and onboarding guides                                                   | ✅ | 2025-11-28 |
 
 ## 3. Alternatives
 
