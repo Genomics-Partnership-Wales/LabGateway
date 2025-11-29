@@ -6,6 +6,7 @@ using LabResultsGateway.API.Application.Processing;
 using LabResultsGateway.API.Application.Retry;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Domain.Entities;
+using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -55,7 +56,17 @@ public class PoisonQueueMessageProcessorTests
             "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":3,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
             3);
 
-        var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
+        var expectedQueueMessage = new QueueMessage(
+            "MSH|^~\\&|...",
+            "test-correlation",
+            3,
+            DateTimeOffset.Parse("2024-01-01T00:00:00Z"),
+            "test-blob");
+
+        _messageQueueServiceMock.Setup(x => x.DeserializeMessageAsync(message.MessageText))
+                               .ReturnsAsync(expectedQueueMessage);
+
+        var context = new RetryContext(expectedQueueMessage.CorrelationId, expectedQueueMessage.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(false);
 
         // Act

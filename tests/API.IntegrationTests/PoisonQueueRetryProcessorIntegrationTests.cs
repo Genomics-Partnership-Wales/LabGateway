@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
 using DotNet.Testcontainers.Containers;
 using FluentAssertions;
+using LabResultsGateway.API.Application.DTOs;
 using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Processing;
 using LabResultsGateway.API.Application.Retry;
@@ -11,6 +13,7 @@ using LabResultsGateway.API.Domain.Entities;
 using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using Testcontainers.Azurite;
 using Xunit;
 
