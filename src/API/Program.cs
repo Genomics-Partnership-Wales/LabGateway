@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
+using LabResultsGateway.API.Application.Extensions;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Infrastructure.ExternalServices;
 using LabResultsGateway.API.Infrastructure.Hl7;
@@ -111,6 +112,9 @@ builder.Services.AddScoped<IBlobStorageService>(serviceProvider =>
 
 builder.Services.AddScoped<ILabReportProcessor, LabReportProcessor>();
 builder.Services.AddScoped<IExternalEndpointService, ExternalEndpointService>();
+
+// Register poison queue retry services
+builder.Services.AddPoisonQueueRetryServices(builder.Configuration);
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
