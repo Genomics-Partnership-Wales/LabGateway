@@ -49,8 +49,8 @@ public class AzureQueueClient : IAzureQueueClient
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A read-only list of queue message wrappers.</returns>
     public async Task<IReadOnlyList<QueueMessageWrapper>> ReceiveMessagesAsync(
-        int maxMessages = 10,
-        TimeSpan? visibilityTimeout = null,
+        int maxMessages,
+        TimeSpan visibilityTimeout,
         CancellationToken cancellationToken = default)
     {
         try
@@ -65,7 +65,7 @@ public class AzureQueueClient : IAzureQueueClient
                     message.MessageId,
                     message.PopReceipt,
                     message.MessageText,
-                    message.DequeueCount))
+                    (int)message.DequeueCount))
                 .ToList()
                 ?? new List<QueueMessageWrapper>();
         }

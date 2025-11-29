@@ -5,6 +5,7 @@ using LabResultsGateway.API.Application.Retry;
 using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace LabResultsGateway.API.Application.Extensions;
 
