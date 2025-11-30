@@ -6,6 +6,7 @@ using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Infrastructure.ExternalServices;
 using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LabResultsGateway.API.Application.Processing;
 
@@ -34,14 +35,14 @@ public class PoisonQueueMessageProcessor : IPoisonQueueMessageProcessor
         IMessageQueueService messageQueueService,
         IExternalEndpointService externalEndpointService,
         IRetryStrategy retryStrategy,
-        PoisonQueueRetryOptions options,
+        IOptions<PoisonQueueRetryOptions> options,
         ActivitySource activitySource,
         ILogger<PoisonQueueMessageProcessor> logger)
     {
         _messageQueueService = messageQueueService ?? throw new ArgumentNullException(nameof(messageQueueService));
         _externalEndpointService = externalEndpointService ?? throw new ArgumentNullException(nameof(externalEndpointService));
         _retryStrategy = retryStrategy ?? throw new ArgumentNullException(nameof(retryStrategy));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
