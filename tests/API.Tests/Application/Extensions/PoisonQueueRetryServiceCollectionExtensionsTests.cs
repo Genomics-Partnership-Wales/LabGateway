@@ -44,7 +44,7 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
         services.AddSingleton(Mock.Of<IMessageQueueService>());
         services.AddSingleton(Mock.Of<IExternalEndpointService>());
         services.AddSingleton(new ActivitySource("Test"));
-        services.AddSingleton(configuration.GetSection(PoisonQueueRetryOptions.SectionName).Get<PoisonQueueRetryOptions>() 
+        services.AddSingleton(configuration.GetSection(PoisonQueueRetryOptions.SectionName).Get<PoisonQueueRetryOptions>()
             ?? new PoisonQueueRetryOptions());
 
         // Act
@@ -167,7 +167,7 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
         services.AddSingleton(Mock.Of<IMessageQueueService>());
         services.AddSingleton(Mock.Of<IExternalEndpointService>());
         services.AddSingleton(new ActivitySource("Test"));
-        services.AddSingleton(configuration.GetSection(PoisonQueueRetryOptions.SectionName).Get<PoisonQueueRetryOptions>() 
+        services.AddSingleton(configuration.GetSection(PoisonQueueRetryOptions.SectionName).Get<PoisonQueueRetryOptions>()
             ?? new PoisonQueueRetryOptions());
 
         // Act
