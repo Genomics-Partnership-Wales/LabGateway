@@ -1,12 +1,12 @@
 using System;
-using LabResultsGateway.API.Domain.ValueObjects;
 
 namespace LabResultsGateway.API.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a lab number is invalid.
+/// Invalid lab numbers indicate a data format issue that cannot be resolved by retry.
 /// </summary>
-public class LabNumberInvalidException : ArgumentException
+public class LabNumberInvalidException : LabProcessingException
 {
     /// <summary>
     /// The invalid lab number value.
@@ -14,35 +14,32 @@ public class LabNumberInvalidException : ArgumentException
     public string InvalidLabNumber { get; }
 
     /// <summary>
-    /// Initializes a new instance of the LabNumberInvalidException class.
+    /// Invalid lab numbers are not retryable - the data format must be corrected at the source.
     /// </summary>
-    /// <param name="invalidLabNumber">The invalid lab number value.</param>
-    /// <param name="message">The error message.</param>
-    /// <param name="paramName">The name of the parameter that caused the exception.</param>
-    public LabNumberInvalidException(string invalidLabNumber, string message, string paramName)
-        : base(message, paramName)
-    {
-        InvalidLabNumber = invalidLabNumber ?? throw new ArgumentNullException(nameof(invalidLabNumber));
-    }
+    public override bool IsRetryable => false;
 
     /// <summary>
     /// Initializes a new instance of the LabNumberInvalidException class.
     /// </summary>
     /// <param name="invalidLabNumber">The invalid lab number value.</param>
     /// <param name="message">The error message.</param>
-    public LabNumberInvalidException(string invalidLabNumber, string message)
+    /// <param name="blobName">The name of the blob being processed.</param>
+    public LabNumberInvalidException(string invalidLabNumber, string message, string? blobName = null)
         : base(message)
     {
         InvalidLabNumber = invalidLabNumber ?? throw new ArgumentNullException(nameof(invalidLabNumber));
+        BlobName = blobName;
     }
 
     /// <summary>
     /// Initializes a new instance of the LabNumberInvalidException class.
     /// </summary>
     /// <param name="invalidLabNumber">The invalid lab number value.</param>
-    public LabNumberInvalidException(string invalidLabNumber)
+    /// <param name="blobName">The name of the blob being processed.</param>
+    public LabNumberInvalidException(string invalidLabNumber, string? blobName = null)
         : base($"The lab number '{invalidLabNumber}' is invalid.")
     {
         InvalidLabNumber = invalidLabNumber ?? throw new ArgumentNullException(nameof(invalidLabNumber));
+        BlobName = blobName;
     }
 }

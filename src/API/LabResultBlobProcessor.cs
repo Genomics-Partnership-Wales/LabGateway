@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using LabResultsGateway.API.Application.Services;
+using LabResultsGateway.API.Domain.Constants;
 using LabResultsGateway.API.Domain.Exceptions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -54,7 +55,7 @@ public class LabResultBlobProcessor
         activity?.SetTag("correlation.id", correlationId);
         activity?.SetTag("blob.name", name);
 
-        if (name.StartsWith("Failed/", StringComparison.OrdinalIgnoreCase))
+        if (ShouldSkipProcessing(name))
         {
             _logger.LogInformation("Skipping processing for file in Failed folder: {BlobName}", name);
             return;
@@ -62,49 +63,90 @@ public class LabResultBlobProcessor
 
         try
         {
-            // Read PDF content from stream
-            using var memoryStream = new MemoryStream();
-            await stream.CopyToAsync(memoryStream, cancellationToken);
-            var pdfBytes = memoryStream.ToArray();
+            var pdfBytes = await ReadStreamContentAsync(stream, cancellationToken);
 
             _logger.LogInformation("Starting lab report processing. BlobName: {BlobName}, CorrelationId: {CorrelationId}, Size: {Size} bytes",
                 name, correlationId, pdfBytes.Length);
 
-            // Process the lab report
             await _labReportProcessor.ProcessLabReportAsync(name, pdfBytes, cancellationToken);
 
             _logger.LogInformation("Lab report processed successfully. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
                 name, correlationId);
             activity?.SetStatus(ActivityStatusCode.Ok);
         }
-        catch (LabNumberInvalidException ex)
+        catch (LabProcessingException ex)
         {
-            _logger.LogError(ex, "Invalid lab number in blob name. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
-                name, correlationId);
-            await _blobStorageService.MoveToFailedFolderAsync(name, cancellationToken);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-        }
-        catch (MetadataNotFoundException ex)
-        {
-            _logger.LogError(ex, "Metadata not found for lab number. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
-                name, correlationId);
-            await _blobStorageService.MoveToFailedFolderAsync(name, cancellationToken);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-        }
-        catch (Hl7GenerationException ex)
-        {
-            _logger.LogError(ex, "HL7 message generation failed. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
-                name, correlationId);
-            await _blobStorageService.MoveToFailedFolderAsync(name, cancellationToken);
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            await HandleLabProcessingExceptionAsync(ex, name, correlationId, activity, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error processing lab report. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
-                name, correlationId);
-            await _blobStorageService.MoveToFailedFolderAsync(name, cancellationToken);
-            // TODO: Send to poison queue with retry count 0 based on queue message format decision
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            await HandleUnexpectedExceptionAsync(ex, name, correlationId, activity, cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Determines if the blob should be skipped from processing.
+    /// </summary>
+    /// <param name="blobName">The name of the blob.</param>
+    /// <returns>True if processing should be skipped; otherwise, false.</returns>
+    private static bool ShouldSkipProcessing(string blobName) =>
+        blobName.StartsWith(BlobConstants.FailedFolderPrefix, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Reads the stream content into a byte array.
+    /// </summary>
+    /// <param name="stream">The stream to read.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The stream content as a byte array.</returns>
+    private static async Task<byte[]> ReadStreamContentAsync(Stream stream, CancellationToken cancellationToken)
+    {
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream, cancellationToken);
+        return memoryStream.ToArray();
+    }
+
+    /// <summary>
+    /// Handles domain-specific lab processing exceptions.
+    /// </summary>
+    /// <param name="ex">The lab processing exception.</param>
+    /// <param name="blobName">The name of the blob.</param>
+    /// <param name="correlationId">The correlation ID for tracing.</param>
+    /// <param name="activity">The current activity for OpenTelemetry.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task HandleLabProcessingExceptionAsync(
+        LabProcessingException ex,
+        string blobName,
+        string correlationId,
+        Activity? activity,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogError(ex, "Lab processing error ({ExceptionType}). BlobName: {BlobName}, CorrelationId: {CorrelationId}, IsRetryable: {IsRetryable}",
+            ex.GetType().Name, blobName, correlationId, ex.IsRetryable);
+
+        await _blobStorageService.MoveToFailedFolderAsync(blobName, cancellationToken);
+        activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+    }
+
+    /// <summary>
+    /// Handles unexpected exceptions during lab report processing.
+    /// </summary>
+    /// <param name="ex">The unexpected exception.</param>
+    /// <param name="blobName">The name of the blob.</param>
+    /// <param name="correlationId">The correlation ID for tracing.</param>
+    /// <param name="activity">The current activity for OpenTelemetry.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task HandleUnexpectedExceptionAsync(
+        Exception ex,
+        string blobName,
+        string correlationId,
+        Activity? activity,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogError(ex, "Unexpected error processing lab report. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
+            blobName, correlationId);
+
+        await _blobStorageService.MoveToFailedFolderAsync(blobName, cancellationToken);
+        // TODO: Send to poison queue with retry count 0 based on queue message format decision
+        activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
     }
 }
