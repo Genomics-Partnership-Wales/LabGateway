@@ -81,7 +81,7 @@ This plan refactors the Azure Function in `src/API/PoisonQueueRetryProcessor.cs`
 ## 3. Alternatives
 
 - **ALT-001**: Use direct Azure SDK calls in business logic (rejected for testability and SRP).
-- **ALT-002**: Implement retry logic as static helpers (rejected for OCP and extensibility).
+- **ALT-002**: Implement retry logic as static helpers git(rejected for OCP and extensibility).
 
 ## 4. Dependencies
 
