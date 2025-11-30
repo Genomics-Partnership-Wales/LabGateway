@@ -25,6 +25,9 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
+// Add Aspire service defaults for OpenTelemetry, health checks, and resilience
+builder.AddServiceDefaults();
+
 // Add Azure Key Vault configuration provider (only if KeyVaultUri is configured)
 if (!string.IsNullOrEmpty(builder.Configuration["KeyVaultUri"]))
 {
