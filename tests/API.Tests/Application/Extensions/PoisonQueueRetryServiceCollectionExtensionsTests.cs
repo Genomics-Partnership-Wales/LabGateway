@@ -1,11 +1,16 @@
+using System.Diagnostics;
 using FluentAssertions;
 using LabResultsGateway.API.Application.Extensions;
 using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Processing;
 using LabResultsGateway.API.Application.Retry;
+using LabResultsGateway.API.Application.Services;
+using LabResultsGateway.API.Infrastructure.ExternalServices;
 using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace LabResultsGateway.API.Tests.Application.Extensions;
@@ -31,6 +36,17 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
             })
             .Build();
 
+        // Register IConfiguration and logging in the service collection (required by IAzureQueueClient factory)
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
+
+        // Register mock dependencies required by PoisonQueueMessageProcessor
+        services.AddSingleton(Mock.Of<IMessageQueueService>());
+        services.AddSingleton(Mock.Of<IExternalEndpointService>());
+        services.AddSingleton(new ActivitySource("Test"));
+        services.AddSingleton(configuration.GetSection(PoisonQueueRetryOptions.SectionName).Get<PoisonQueueRetryOptions>() 
+            ?? new PoisonQueueRetryOptions());
+
         // Act
         services.AddPoisonQueueRetryServices(configuration);
 
@@ -38,7 +54,7 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
         var serviceProvider = services.BuildServiceProvider();
 
         // Verify options are bound correctly
-        var options = serviceProvider.GetRequiredService<PoisonQueueRetryOptions>();
+        var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PoisonQueueRetryOptions>>().Value;
         options.MaxMessagesPerBatch.Should().Be(10);
         options.MaxRetryAttempts.Should().Be(3);
         options.BaseRetryDelayMinutes.Should().Be(2.0);
@@ -143,12 +159,23 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
             })
             .Build();
 
+        // Register IConfiguration and logging in the service collection (required by IAzureQueueClient factory)
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddLogging();
+
+        // Register mock dependencies required by PoisonQueueMessageProcessor
+        services.AddSingleton(Mock.Of<IMessageQueueService>());
+        services.AddSingleton(Mock.Of<IExternalEndpointService>());
+        services.AddSingleton(new ActivitySource("Test"));
+        services.AddSingleton(configuration.GetSection(PoisonQueueRetryOptions.SectionName).Get<PoisonQueueRetryOptions>() 
+            ?? new PoisonQueueRetryOptions());
+
         // Act
         services.AddPoisonQueueRetryServices(configuration);
 
         // Assert
         var serviceProvider = services.BuildServiceProvider();
-        var options = serviceProvider.GetRequiredService<PoisonQueueRetryOptions>();
+        var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PoisonQueueRetryOptions>>().Value;
 
         options.MaxMessagesPerBatch.Should().Be(25);
         options.MaxRetryAttempts.Should().Be(5);

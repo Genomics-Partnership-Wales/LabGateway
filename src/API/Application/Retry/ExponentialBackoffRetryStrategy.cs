@@ -1,5 +1,6 @@
 using LabResultsGateway.API.Application.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LabResultsGateway.API.Application.Retry;
 
@@ -15,13 +16,14 @@ public class ExponentialBackoffRetryStrategy : IRetryStrategy
     /// <summary>
     /// Initializes a new instance of the ExponentialBackoffRetryStrategy class.
     /// </summary>
-    /// <param name="options">Retry configuration options.</param>
+    /// <param name="options">Retry configuration options wrapped in IOptions.</param>
     /// <param name="logger">Logger for tracking operations.</param>
     public ExponentialBackoffRetryStrategy(
-        PoisonQueueRetryOptions options,
+        IOptions<PoisonQueueRetryOptions> options,
         ILogger<ExponentialBackoffRetryStrategy> logger)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
+        _options = options.Value ?? throw new ArgumentNullException(nameof(options), "Options.Value cannot be null");
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 

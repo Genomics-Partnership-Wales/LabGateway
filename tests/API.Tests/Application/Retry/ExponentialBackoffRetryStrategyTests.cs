@@ -2,6 +2,7 @@ using FluentAssertions;
 using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Retry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -24,11 +25,18 @@ public class ExponentialBackoffRetryStrategyTests
         };
     }
 
+    private IOptions<PoisonQueueRetryOptions> CreateOptions(PoisonQueueRetryOptions options)
+    {
+        var mock = new Mock<IOptions<PoisonQueueRetryOptions>>();
+        mock.Setup(o => o.Value).Returns(options);
+        return mock.Object;
+    }
+
     [Fact]
     public void ShouldRetry_ReturnsTrue_WhenCurrentRetryCountLessThanMaxAttempts()
     {
         // Arrange
-        var strategy = new ExponentialBackoffRetryStrategy(_options, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(_options), _loggerMock.Object);
         var context = new RetryContext("test-correlation", 1, 3);
 
         // Act
@@ -42,7 +50,7 @@ public class ExponentialBackoffRetryStrategyTests
     public void ShouldRetry_ReturnsFalse_WhenCurrentRetryCountEqualsMaxAttempts()
     {
         // Arrange
-        var strategy = new ExponentialBackoffRetryStrategy(_options, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(_options), _loggerMock.Object);
         var context = new RetryContext("test-correlation", 3, 3);
 
         // Act
@@ -56,7 +64,7 @@ public class ExponentialBackoffRetryStrategyTests
     public void ShouldRetry_ReturnsFalse_WhenCurrentRetryCountGreaterThanMaxAttempts()
     {
         // Arrange
-        var strategy = new ExponentialBackoffRetryStrategy(_options, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(_options), _loggerMock.Object);
         var context = new RetryContext("test-correlation", 4, 3);
 
         // Act
@@ -77,7 +85,7 @@ public class ExponentialBackoffRetryStrategyTests
             UseJitter = false,
             MaxJitterPercentage = 0.3
         };
-        var strategy = new ExponentialBackoffRetryStrategy(optionsWithoutJitter, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(optionsWithoutJitter), _loggerMock.Object);
         var context = new RetryContext("test-correlation", 1, 3);
 
         // Act
@@ -92,7 +100,7 @@ public class ExponentialBackoffRetryStrategyTests
     public void CalculateNextRetryDelay_CalculatesCorrectExponentialBackoff_WithJitter()
     {
         // Arrange
-        var strategy = new ExponentialBackoffRetryStrategy(_options, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(_options), _loggerMock.Object);
         var context = new RetryContext("test-correlation", 1, 3);
 
         // Act
@@ -117,7 +125,7 @@ public class ExponentialBackoffRetryStrategyTests
             UseJitter = false,
             MaxJitterPercentage = 0.0
         };
-        var strategy = new ExponentialBackoffRetryStrategy(optionsWithoutJitter, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(optionsWithoutJitter), _loggerMock.Object);
 
         // Act & Assert
         // Retry 0: Math.Pow(1.5, 0 + 1) = 1.5^1 = 1.5 minutes
@@ -137,7 +145,7 @@ public class ExponentialBackoffRetryStrategyTests
     public void CalculateNextRetryDelay_LogsCalculatedDelay()
     {
         // Arrange
-        var strategy = new ExponentialBackoffRetryStrategy(_options, _loggerMock.Object);
+        var strategy = new ExponentialBackoffRetryStrategy(CreateOptions(_options), _loggerMock.Object);
         var context = new RetryContext("test-correlation-123", 2, 3);
 
         // Act
