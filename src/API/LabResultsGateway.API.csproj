@@ -34,4 +34,8 @@
     <PackageReference Include="Polly.Extensions.Http" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\LabResultsGateway.ServiceDefaults\LabResultsGateway.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

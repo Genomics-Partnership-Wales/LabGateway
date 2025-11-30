@@ -1,0 +1,16 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.0.1">
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\API\LabResultsGateway.API.csproj" />
+    <ProjectReference Include="..\src\Client\LabResultsGateway.Client.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>d9daa83f-1042-429b-ac67-f6f44b379835</UserSecretsId>
+  </PropertyGroup>
+
+</Project>
