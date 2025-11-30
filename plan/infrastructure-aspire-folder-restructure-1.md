@@ -36,9 +36,9 @@ This plan relocates the two Aspire-generated projects (`LabResultsGateway.AppHos
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-001 | Move `LabResultsGateway.AppHost/` to `src/AppHost/` using `Move-Item` or `mv` command | ⏳ | |
-| TASK-002 | Move `LabResultsGateway.ServiceDefaults/` to `src/ServiceDefaults/` using `Move-Item` or `mv` command | ⏳ | |
-| TASK-003 | Verify folders exist at new locations: `src/AppHost/` and `src/ServiceDefaults/` | | |
+| TASK-001 | Move `LabResultsGateway.AppHost/` to `src/AppHost/` using `Move-Item` or `mv` command | ✅ | 2025-11-30 |
+| TASK-002 | Move `LabResultsGateway.ServiceDefaults/` to `src/ServiceDefaults/` using `Move-Item` or `mv` command | ✅ | 2025-11-30 |
+| TASK-003 | Verify folders exist at new locations: `src/AppHost/` and `src/ServiceDefaults/` | ✅ | 2025-11-30 |
 
 ### Implementation Phase 2: Update Solution File
 
@@ -73,7 +73,7 @@ This plan relocates the two Aspire-generated projects (`LabResultsGateway.AppHos
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-010 | Run `dotnet build LabResultsGateway.sln` and verify all projects compile successfully | | |
+| TASK-010 | Run `dotnet build LabResultsGateway.sln` and verify all projects compile successfully | ✅ | 2025-11-30 |
 | TASK-011 | Run `dotnet run --project src/AppHost/LabResultsGateway.AppHost.csproj` to verify AppHost starts correctly | | |
 | TASK-012 | Verify Aspire dashboard loads and shows all resources | | |
 
