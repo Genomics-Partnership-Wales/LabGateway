@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Azure.Storage.Queues;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Configurations;
@@ -21,10 +23,27 @@ namespace LabResultsGateway.API.IntegrationTests;
 
 public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
 {
-    private AzuriteContainer _azuriteContainer;
-    private IServiceProvider _serviceProvider;
-    private PoisonQueueRetryOptions _options;
-    private Mock<IMessageQueueService> _messageQueueServiceMock;
+    private AzuriteContainer? _azuriteContainer;
+    private IServiceProvider? _serviceProvider;
+    private PoisonQueueRetryOptions? _options;
+    private Mock<IMessageQueueService>? _messageQueueServiceMock;
+
+    /// <summary>
+    /// Ensures a nullable field was properly initialized during test setup.
+    /// Throws InvalidOperationException with a meaningful message if the field is null.
+    /// </summary>
+    /// <typeparam name="T">The type of the field (must be a reference type).</typeparam>
+    /// <param name="field">The nullable field to check.</param>
+    /// <param name="fieldName">Auto-captured field name via CallerArgumentExpression.</param>
+    /// <returns>The non-null field value.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when field is null.</exception>
+    private static T EnsureInitialized<T>(
+        [NotNull] T? field,
+        [CallerArgumentExpression(nameof(field))] string? fieldName = null) where T : class
+    {
+        return field ?? throw new InvalidOperationException(
+            $"Test setup failed: {fieldName} was not initialized. Ensure InitializeAsync() completed successfully.");
+    }
 
     public async Task InitializeAsync()
     {
@@ -105,8 +124,9 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
     public async Task EndToEndFlow_SeedsPoisonQueueWithTestMessage_VerifyMessageProcessedAndDeleted()
     {
         // Arrange
-        var queueClient = _serviceProvider.GetRequiredService<IAzureQueueClient>();
-        var orchestrator = _serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
+        var serviceProvider = EnsureInitialized(_serviceProvider);
+        var queueClient = serviceProvider.GetRequiredService<IAzureQueueClient>();
+        var orchestrator = serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
 
         // Seed poison queue with test message
         var testMessage = new QueueMessage(
@@ -142,15 +162,19 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
     public async Task EndToEndFlow_MessageExceedsMaxRetries_SentToDeadLetterQueue()
     {
         // Arrange
-        var queueClient = _serviceProvider.GetRequiredService<IAzureQueueClient>();
-        var messageQueueService = _serviceProvider.GetRequiredService<IMessageQueueService>();
-        var orchestrator = _serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
+        var serviceProvider = EnsureInitialized(_serviceProvider);
+        var options = EnsureInitialized(_options);
+        var messageQueueServiceMock = EnsureInitialized(_messageQueueServiceMock);
+
+        var queueClient = serviceProvider.GetRequiredService<IAzureQueueClient>();
+        var messageQueueService = serviceProvider.GetRequiredService<IMessageQueueService>();
+        var orchestrator = serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
 
         // Seed poison queue with test message that exceeds max retries
         var testMessage = new QueueMessage(
             "MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|123|P|2.5|||AL|NE|||||",
             $"test-{Guid.NewGuid()}",
-            _options.MaxRetryAttempts, // Already at max retries
+            options.MaxRetryAttempts, // Already at max retries
             DateTimeOffset.UtcNow,
             "test-blob"
         );
@@ -169,7 +193,7 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
 
         // Assert
         // Verify message was sent to dead letter queue
-        _messageQueueServiceMock.Verify(
+        messageQueueServiceMock.Verify(
             x => x.SendToDeadLetterQueueAsync(It.Is<DeadLetterMessage>(
                 dlm => dlm.CorrelationId == testMessage.CorrelationId &&
                        dlm.RetryCount == testMessage.RetryCount)),
@@ -184,8 +208,9 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
     public async Task EndToEndFlow_MultipleMessagesProcessedConcurrently()
     {
         // Arrange
-        var queueClient = _serviceProvider.GetRequiredService<IAzureQueueClient>();
-        var orchestrator = _serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
+        var serviceProvider = EnsureInitialized(_serviceProvider);
+        var queueClient = serviceProvider.GetRequiredService<IAzureQueueClient>();
+        var orchestrator = serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
 
         await queueClient.EnsureQueueExistsAsync();
 
