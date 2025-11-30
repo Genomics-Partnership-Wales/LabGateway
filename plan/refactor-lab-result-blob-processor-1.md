@@ -2,15 +2,15 @@
 goal: Refactor LabResultBlobProcessor for DRY exception handling and improved maintainability
 version: 1.0
 date_created: 2025-11-30
-last_updated: 2025-11-30
+last_updated: 2025-12-01
 owner: Platform Engineering
-status: 'Planned'
+status: 'Complete'
 tags: [refactor, azure-functions, architecture, dry, solid, exceptions]
 ---
 
 # Introduction
 
-![Status: Planned](https://img.shields.io/badge/status-Planned-blue)
+![Status: Complete](https://img.shields.io/badge/status-Complete-green)
 
 This plan refactors the Azure Function in `src/API/LabResultBlobProcessor.cs` to eliminate repetitive exception handling patterns, introduce a unified domain exception base class, centralize constants, and improve code maintainability. The refactor applies DRY (Don't Repeat Yourself) and SRP (Single Responsibility Principle) while maintaining all original functionality.
 
@@ -38,8 +38,8 @@ This plan refactors the Azure Function in `src/API/LabResultBlobProcessor.cs` to
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-001 | Create `src/API/Domain/Exceptions/LabProcessingException.cs` as abstract base class inheriting from `Exception`. Add properties: `BlobName` (string?, init-only), `IsRetryable` (virtual bool, default false). Include protected constructors accepting (string message) and (string message, Exception innerException). Add XML documentation. | | |
-| TASK-002 | Create `src/API/Domain/Constants/BlobConstants.cs` static class with constants: `FailedFolderPrefix = "Failed/"`, `LabResultsContainer = "lab-results-gateway"`. Add XML documentation. | | |
+| TASK-001 | Create `src/API/Domain/Exceptions/LabProcessingException.cs` as abstract base class inheriting from `Exception`. Add properties: `BlobName` (string?, init-only), `IsRetryable` (virtual bool, default false). Include protected constructors accepting (string message) and (string message, Exception innerException). Add XML documentation. | ✅ | 2025-12-01 |
+| TASK-002 | Create `src/API/Domain/Constants/BlobConstants.cs` static class with constants: `FailedFolderPrefix = "Failed/"`, `LabResultsContainer = "lab-results-gateway"`. Add XML documentation. | ✅ | 2025-12-01 |
 
 ### Implementation Phase 2: Exception Hierarchy Refactoring
 
@@ -47,9 +47,9 @@ This plan refactors the Azure Function in `src/API/LabResultBlobProcessor.cs` to
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-003 | Refactor `src/API/Domain/Exceptions/LabNumberInvalidException.cs`: Change base class from `ArgumentException` to `LabProcessingException`. Keep all existing constructors but update base calls. Preserve `InvalidLabNumber` property. Override `IsRetryable` to return `false` (invalid input is not retryable). | | |
-| TASK-004 | Refactor `src/API/Domain/Exceptions/MetadataNotFoundException.cs`: Change base class from `InvalidOperationException` to `LabProcessingException`. Keep all existing constructors but update base calls. Preserve `LabNumber` property. Override `IsRetryable` to return `true` (metadata service may have transient issues). | | |
-| TASK-005 | Refactor `src/API/Domain/Exceptions/Hl7GenerationException.cs`: Change base class from `InvalidOperationException` to `LabProcessingException`. Keep all existing constructors but update base calls. Preserve `LabNumber` property. Override `IsRetryable` to return `false` (generation failures are deterministic). | | |
+| TASK-003 | Refactor `src/API/Domain/Exceptions/LabNumberInvalidException.cs`: Change base class from `ArgumentException` to `LabProcessingException`. Keep all existing constructors but update base calls. Preserve `InvalidLabNumber` property. Override `IsRetryable` to return `false` (invalid input is not retryable). | ✅ | 2025-12-01 |
+| TASK-004 | Refactor `src/API/Domain/Exceptions/MetadataNotFoundException.cs`: Change base class from `InvalidOperationException` to `LabProcessingException`. Keep all existing constructors but update base calls. Preserve `LabNumber` property. Override `IsRetryable` to return `true` (metadata service may have transient issues). | ✅ | 2025-12-01 |
+| TASK-005 | Refactor `src/API/Domain/Exceptions/Hl7GenerationException.cs`: Change base class from `InvalidOperationException` to `LabProcessingException`. Keep all existing constructors but update base calls. Preserve `LabNumber` property. Override `IsRetryable` to return `false` (generation failures are deterministic). | ✅ | 2025-12-01 |
 
 ### Implementation Phase 3: Blob Processor Refactoring
 
@@ -57,13 +57,13 @@ This plan refactors the Azure Function in `src/API/LabResultBlobProcessor.cs` to
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-006 | Refactor `src/API/LabResultBlobProcessor.cs`: Add using statement for `LabResultsGateway.API.Domain.Constants`. Update BlobTrigger attribute to use `$"{BlobConstants.LabResultsContainer}/{{name}}"` interpolated string. | | |
-| TASK-007 | Add private static helper method `SetActivityTags(Activity? activity, string correlationId, string blobName)` that sets "correlation.id" and "blob.name" tags on the activity. | | |
-| TASK-008 | Add private static helper method `ShouldSkipProcessing(string blobName)` returning `blobName.StartsWith(BlobConstants.FailedFolderPrefix, StringComparison.OrdinalIgnoreCase)`. | | |
-| TASK-009 | Add private static async method `ReadStreamAsync(Stream stream, CancellationToken cancellationToken)` returning `Task<byte[]>` that copies stream to MemoryStream and returns ToArray(). | | |
-| TASK-010 | Add private async method `HandleLabProcessingExceptionAsync(LabProcessingException ex, string blobName, string correlationId, Activity? activity, CancellationToken cancellationToken)` that logs error with ExceptionType, BlobName, CorrelationId, IsRetryable; calls MoveToFailedFolderAsync; sets activity error status. | | |
-| TASK-011 | Add private async method `HandleUnexpectedExceptionAsync(Exception ex, string blobName, string correlationId, Activity? activity, CancellationToken cancellationToken)` that logs error with BlobName, CorrelationId; calls MoveToFailedFolderAsync; sets activity error status. | | |
-| TASK-012 | Refactor `Run` method: Replace inline activity tag setting with `SetActivityTags()` call. Replace inline skip check with `ShouldSkipProcessing()` call. Replace inline stream reading with `ReadStreamAsync()` call. Replace 4 catch blocks with 2 catch blocks: one for `LabProcessingException` calling `HandleLabProcessingExceptionAsync()`, one for `Exception` calling `HandleUnexpectedExceptionAsync()`. | | |
+| TASK-006 | Refactor `src/API/LabResultBlobProcessor.cs`: Add using statement for `LabResultsGateway.API.Domain.Constants`. Update BlobTrigger attribute to use `$"{BlobConstants.LabResultsContainer}/{{name}}"` interpolated string. | ✅ | 2025-12-01 |
+| TASK-007 | Add private static helper method `SetActivityTags(Activity? activity, string correlationId, string blobName)` that sets "correlation.id" and "blob.name" tags on the activity. | ✅ | 2025-12-01 |
+| TASK-008 | Add private static helper method `ShouldSkipProcessing(string blobName)` returning `blobName.StartsWith(BlobConstants.FailedFolderPrefix, StringComparison.OrdinalIgnoreCase)`. | ✅ | 2025-12-01 |
+| TASK-009 | Add private static async method `ReadStreamAsync(Stream stream, CancellationToken cancellationToken)` returning `Task<byte[]>` that copies stream to MemoryStream and returns ToArray(). | ✅ | 2025-12-01 |
+| TASK-010 | Add private async method `HandleLabProcessingExceptionAsync(LabProcessingException ex, string blobName, string correlationId, Activity? activity, CancellationToken cancellationToken)` that logs error with ExceptionType, BlobName, CorrelationId, IsRetryable; calls MoveToFailedFolderAsync; sets activity error status. | ✅ | 2025-12-01 |
+| TASK-011 | Add private async method `HandleUnexpectedExceptionAsync(Exception ex, string blobName, string correlationId, Activity? activity, CancellationToken cancellationToken)` that logs error with BlobName, CorrelationId; calls MoveToFailedFolderAsync; sets activity error status. | ✅ | 2025-12-01 |
+| TASK-012 | Refactor `Run` method: Replace inline activity tag setting with `SetActivityTags()` call. Replace inline skip check with `ShouldSkipProcessing()` call. Replace inline stream reading with `ReadStreamAsync()` call. Replace 4 catch blocks with 2 catch blocks: one for `LabProcessingException` calling `HandleLabProcessingExceptionAsync()`, one for `Exception` calling `HandleUnexpectedExceptionAsync()`. | ✅ | 2025-12-01 |
 
 ### Implementation Phase 4: Unit Testing
 
@@ -71,11 +71,11 @@ This plan refactors the Azure Function in `src/API/LabResultBlobProcessor.cs` to
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-013 | Create `tests/API.Tests/Domain/Exceptions/LabProcessingExceptionTests.cs` with tests: verify `IsRetryable` default is false; verify `BlobName` can be set via init; verify inheritance chain allows catching as `LabProcessingException`. | | |
-| TASK-014 | Update or create `tests/API.Tests/Domain/Exceptions/LabNumberInvalidExceptionTests.cs` with tests: verify inherits from `LabProcessingException`; verify `IsRetryable` returns false; verify `InvalidLabNumber` property is set correctly. | | |
-| TASK-015 | Update or create `tests/API.Tests/Domain/Exceptions/MetadataNotFoundExceptionTests.cs` with tests: verify inherits from `LabProcessingException`; verify `IsRetryable` returns true; verify `LabNumber` property is set correctly. | | |
-| TASK-016 | Update or create `tests/API.Tests/Domain/Exceptions/Hl7GenerationExceptionTests.cs` with tests: verify inherits from `LabProcessingException`; verify `IsRetryable` returns false; verify `LabNumber` property is set correctly. | | |
-| TASK-017 | Create `tests/API.Tests/Domain/Constants/BlobConstantsTests.cs` with tests: verify `FailedFolderPrefix` equals "Failed/"; verify `LabResultsContainer` equals "lab-results-gateway". | | |
+| TASK-013 | Create `tests/API.Tests/Domain/Exceptions/LabProcessingExceptionTests.cs` with tests: verify `IsRetryable` default is false; verify `BlobName` can be set via init; verify inheritance chain allows catching as `LabProcessingException`. | ✅ | 2025-12-01 |
+| TASK-014 | Update or create `tests/API.Tests/Domain/Exceptions/LabNumberInvalidExceptionTests.cs` with tests: verify inherits from `LabProcessingException`; verify `IsRetryable` returns false; verify `InvalidLabNumber` property is set correctly. | ✅ | 2025-12-01 |
+| TASK-015 | Update or create `tests/API.Tests/Domain/Exceptions/MetadataNotFoundExceptionTests.cs` with tests: verify inherits from `LabProcessingException`; verify `IsRetryable` returns true; verify `LabNumber` property is set correctly. | ✅ | 2025-12-01 |
+| TASK-016 | Update or create `tests/API.Tests/Domain/Exceptions/Hl7GenerationExceptionTests.cs` with tests: verify inherits from `LabProcessingException`; verify `IsRetryable` returns false; verify `LabNumber` property is set correctly. | ✅ | 2025-12-01 |
+| TASK-017 | Create `tests/API.Tests/Domain/Constants/BlobConstantsTests.cs` with tests: verify `FailedFolderPrefix` equals "Failed/"; verify `LabResultsContainer` equals "lab-results-gateway". | ✅ | 2025-12-01 |
 
 ## 3. Alternatives
 
