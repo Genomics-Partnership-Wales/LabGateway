@@ -19,7 +19,7 @@ public class PoisonQueueRetryOrchestratorTests
     private readonly Mock<IPoisonQueueMessageProcessor> _messageProcessorMock;
     private readonly Mock<IMessageQueueService> _messageQueueServiceMock;
     private readonly Mock<IRetryStrategy> _retryStrategyMock;
-    private readonly Mock<ActivitySource> _activitySourceMock;
+    private readonly ActivitySource _activitySource;
     private readonly Mock<ILogger<PoisonQueueRetryOrchestrator>> _loggerMock;
     private readonly PoisonQueueRetryOptions _options;
 
@@ -29,7 +29,7 @@ public class PoisonQueueRetryOrchestratorTests
         _messageProcessorMock = new Mock<IPoisonQueueMessageProcessor>();
         _messageQueueServiceMock = new Mock<IMessageQueueService>();
         _retryStrategyMock = new Mock<IRetryStrategy>();
-        _activitySourceMock = new Mock<ActivitySource>();
+        _activitySource = new ActivitySource("TestActivitySource");
         _loggerMock = new Mock<ILogger<PoisonQueueRetryOrchestrator>>();
         _options = new PoisonQueueRetryOptions
         {
@@ -52,7 +52,7 @@ public class PoisonQueueRetryOrchestratorTests
             _messageQueueServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
@@ -75,7 +75,7 @@ public class PoisonQueueRetryOrchestratorTests
             _messageQueueServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
@@ -109,7 +109,7 @@ public class PoisonQueueRetryOrchestratorTests
             _messageQueueServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
@@ -148,7 +148,7 @@ public class PoisonQueueRetryOrchestratorTests
             _messageQueueServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
@@ -181,7 +181,7 @@ public class PoisonQueueRetryOrchestratorTests
             _messageQueueServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))
@@ -217,7 +217,7 @@ public class PoisonQueueRetryOrchestratorTests
             _messageQueueServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         _azureQueueClientMock.Setup(x => x.ReceiveMessagesAsync(It.IsAny<int>(), It.IsAny<TimeSpan>()))

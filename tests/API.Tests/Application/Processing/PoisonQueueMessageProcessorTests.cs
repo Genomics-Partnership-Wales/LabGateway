@@ -19,7 +19,7 @@ public class PoisonQueueMessageProcessorTests
     private readonly Mock<IMessageQueueService> _messageQueueServiceMock;
     private readonly Mock<IExternalEndpointService> _externalEndpointServiceMock;
     private readonly Mock<IRetryStrategy> _retryStrategyMock;
-    private readonly Mock<ActivitySource> _activitySourceMock;
+    private readonly ActivitySource _activitySource;
     private readonly Mock<ILogger<PoisonQueueMessageProcessor>> _loggerMock;
     private readonly PoisonQueueRetryOptions _options;
 
@@ -28,7 +28,7 @@ public class PoisonQueueMessageProcessorTests
         _messageQueueServiceMock = new Mock<IMessageQueueService>();
         _externalEndpointServiceMock = new Mock<IExternalEndpointService>();
         _retryStrategyMock = new Mock<IRetryStrategy>();
-        _activitySourceMock = new Mock<ActivitySource>();
+        _activitySource = new ActivitySource("TestActivitySource");
         _loggerMock = new Mock<ILogger<PoisonQueueMessageProcessor>>();
         _options = new PoisonQueueRetryOptions
         {
@@ -48,7 +48,7 @@ public class PoisonQueueMessageProcessorTests
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         var message = new QueueMessageWrapper(
@@ -94,7 +94,7 @@ public class PoisonQueueMessageProcessorTests
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         var message = new QueueMessageWrapper(
@@ -138,7 +138,7 @@ public class PoisonQueueMessageProcessorTests
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         var message = new QueueMessageWrapper(
@@ -182,7 +182,7 @@ public class PoisonQueueMessageProcessorTests
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         var invalidMessage = new QueueMessageWrapper(
@@ -214,7 +214,7 @@ public class PoisonQueueMessageProcessorTests
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            _activitySource,
             _loggerMock.Object);
 
         var message = new QueueMessageWrapper(
@@ -258,15 +258,14 @@ public class PoisonQueueMessageProcessorTests
     {
         // Arrange
         var activity = new Mock<Activity>();
-        _activitySourceMock.Setup(x => x.StartActivity("ProcessPoisonQueueMessage", ActivityKind.Internal))
-                          .Returns(activity.Object);
+        var activitySource = new ActivitySource("TestActivitySource");
 
         var processor = new PoisonQueueMessageProcessor(
             _messageQueueServiceMock.Object,
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
             _options,
-            _activitySourceMock.Object,
+            activitySource,
             _loggerMock.Object);
 
         var message = new QueueMessageWrapper(

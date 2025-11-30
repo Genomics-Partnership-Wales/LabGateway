@@ -24,6 +24,7 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
     private AzuriteContainer _azuriteContainer;
     private IServiceProvider _serviceProvider;
     private PoisonQueueRetryOptions _options;
+    private Mock<IMessageQueueService> _messageQueueServiceMock;
 
     public async Task InitializeAsync()
     {
@@ -49,6 +50,11 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
             MaxJitterPercentage = 0.0
         };
 
+        // Initialize mocks
+        _messageQueueServiceMock = new Mock<IMessageQueueService>();
+        _messageQueueServiceMock.Setup(x => x.SendToDeadLetterQueueAsync(It.IsAny<DeadLetterMessage>()))
+            .Returns(Task.CompletedTask);
+
         // Setup DI container
         var services = new ServiceCollection();
         services.AddSingleton(_options);
@@ -60,12 +66,9 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         services.AddScoped<IAzureQueueClient>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<AzureQueueClient>>();
-            // Create QueueServiceClient pointing to Azurite
-            var queueServiceClient = new QueueServiceClient(
-                new Uri($"http://127.0.0.1:10001/devstoreaccount1"),
-                new AzureNamedKeyCredential("devstoreaccount1",
-                    "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="));
-
+            // Create QueueServiceClient pointing to Azurite using connection string
+            var connectionString = "UseDevelopmentStorage=true";
+            var queueServiceClient = new QueueServiceClient(connectionString);
             var queueClient = queueServiceClient.GetQueueClient("poison-queue");
             return new AzureQueueClient(queueClient, logger);
         });
@@ -75,13 +78,7 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         services.AddScoped<IPoisonQueueRetryOrchestrator, PoisonQueueRetryOrchestrator>();
 
         // Mock external dependencies
-        services.AddScoped<IMessageQueueService>(sp =>
-        {
-            var mock = new Mock<IMessageQueueService>();
-            mock.Setup(x => x.SendToDeadLetterQueueAsync(It.IsAny<DeadLetterMessage>()))
-                .Returns(Task.CompletedTask);
-            return mock.Object;
-        });
+        services.AddScoped<IMessageQueueService>(_ => _messageQueueServiceMock.Object);
 
         services.AddScoped<IExternalEndpointService>(sp =>
         {
@@ -126,11 +123,8 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         await queueClient.EnsureQueueExistsAsync();
 
         // Get the underlying QueueClient for direct message sending
-        var queueServiceClient = new QueueServiceClient(
-            new Uri($"http://127.0.0.1:10001/devstoreaccount1"),
-            new AzureNamedKeyCredential("devstoreaccount1",
-                "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="));
-
+        var connectionString = "UseDevelopmentStorage=true";
+        var queueServiceClient = new QueueServiceClient(connectionString);
         var queueClientDirect = queueServiceClient.GetQueueClient("poison-queue");
         await queueClientDirect.SendMessageAsync(messageJson);
 
@@ -165,11 +159,8 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
 
         await queueClient.EnsureQueueExistsAsync();
 
-        var queueServiceClient = new QueueServiceClient(
-            new Uri($"http://127.0.0.1:10001/devstoreaccount1"),
-            new AzureNamedKeyCredential("devstoreaccount1",
-                "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="));
-
+        var connectionString = "UseDevelopmentStorage=true";
+        var queueServiceClient = new QueueServiceClient(connectionString);
         var queueClientDirect = queueServiceClient.GetQueueClient("poison-queue");
         await queueClientDirect.SendMessageAsync(messageJson);
 
@@ -178,7 +169,7 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
 
         // Assert
         // Verify message was sent to dead letter queue
-        messageQueueService.Verify(
+        _messageQueueServiceMock.Verify(
             x => x.SendToDeadLetterQueueAsync(It.Is<DeadLetterMessage>(
                 dlm => dlm.CorrelationId == testMessage.CorrelationId &&
                        dlm.RetryCount == testMessage.RetryCount)),
@@ -198,11 +189,8 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
 
         await queueClient.EnsureQueueExistsAsync();
 
-        var queueServiceClient = new QueueServiceClient(
-            new Uri($"http://127.0.0.1:10001/devstoreaccount1"),
-            new AzureNamedKeyCredential("devstoreaccount1",
-                "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="));
-
+        var connectionString = "UseDevelopmentStorage=true";
+        var queueServiceClient = new QueueServiceClient(connectionString);
         var queueClientDirect = queueServiceClient.GetQueueClient("poison-queue");
 
         // Seed multiple messages
