@@ -6,8 +6,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\API\LabResultsGateway.API.csproj" />
-    <ProjectReference Include="..\src\Client\LabResultsGateway.Client.csproj" />
+    <ProjectReference Include="..\API\LabResultsGateway.API.csproj" />
+    <ProjectReference Include="..\Client\LabResultsGateway.Client.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

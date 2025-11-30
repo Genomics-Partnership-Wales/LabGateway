@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LabResultsGateway.ServiceDefaults\LabResultsGateway.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\ServiceDefaults\LabResultsGateway.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
