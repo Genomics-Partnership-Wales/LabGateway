@@ -26,8 +26,8 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
                 ["PoisonQueueRetry:ProcessingVisibilityTimeoutMinutes"] = "5",
                 ["PoisonQueueRetry:UseJitter"] = "true",
                 ["PoisonQueueRetry:MaxJitterPercentage"] = "0.3",
-                ["ConnectionStrings:StorageConnection"] = "UseDevelopmentStorage=true",
-                ["AzureQueues:PoisonQueueName"] = "poison-queue"
+                ["StorageConnection"] = "UseDevelopmentStorage=true",
+                ["PoisonQueueName"] = "poison-queue"
             })
             .Build();
 
@@ -62,8 +62,8 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["PoisonQueueRetry:MaxMessagesPerBatch"] = "10",
-                ["AzureQueues:PoisonQueueName"] = "poison-queue"
-                // Missing StorageConnection
+                // ["StorageConnection"] = "UseDevelopmentStorage=true", // Missing
+                ["PoisonQueueName"] = "poison-queue"
             })
             .Build();
 
@@ -83,8 +83,8 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["PoisonQueueRetry:MaxMessagesPerBatch"] = "10",
-                ["ConnectionStrings:StorageConnection"] = "UseDevelopmentStorage=true"
-                // Missing PoisonQueueName
+                ["StorageConnection"] = "UseDevelopmentStorage=true"
+                // ["PoisonQueueName"] = "poison-queue" // Missing
             })
             .Build();
 
@@ -105,8 +105,8 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
             {
                 ["PoisonQueueRetry:MaxMessagesPerBatch"] = "10",
                 ["PoisonQueueRetry:MaxRetryAttempts"] = "3",
-                ["ConnectionStrings:StorageConnection"] = "UseDevelopmentStorage=true",
-                ["AzureQueues:PoisonQueueName"] = "poison-queue"
+                ["StorageConnection"] = "UseDevelopmentStorage=true",
+                ["PoisonQueueName"] = "poison-queue"
             })
             .Build();
 
@@ -138,8 +138,8 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
                 ["PoisonQueueRetry:ProcessingVisibilityTimeoutMinutes"] = "10",
                 ["PoisonQueueRetry:UseJitter"] = "false",
                 ["PoisonQueueRetry:MaxJitterPercentage"] = "0.2",
-                ["ConnectionStrings:StorageConnection"] = "UseDevelopmentStorage=true",
-                ["AzureQueues:PoisonQueueName"] = "test-queue"
+                ["StorageConnection"] = "UseDevelopmentStorage=true",
+                ["PoisonQueueName"] = "test-queue"
             })
             .Build();
 
