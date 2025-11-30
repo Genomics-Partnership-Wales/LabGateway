@@ -8,6 +8,7 @@ using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Domain.Entities;
 using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 using static Moq.Times;
@@ -22,6 +23,7 @@ public class PoisonQueueMessageProcessorTests
     private readonly ActivitySource _activitySource;
     private readonly Mock<ILogger<PoisonQueueMessageProcessor>> _loggerMock;
     private readonly PoisonQueueRetryOptions _options;
+    private readonly IOptions<PoisonQueueRetryOptions> _wrappedOptions;
 
     public PoisonQueueMessageProcessorTests()
     {
@@ -37,6 +39,7 @@ public class PoisonQueueMessageProcessorTests
             UseJitter = true,
             MaxJitterPercentage = 0.3
         };
+        _wrappedOptions = Options.Create(_options);
     }
 
     [Fact]
@@ -47,7 +50,7 @@ public class PoisonQueueMessageProcessorTests
             _messageQueueServiceMock.Object,
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
-            _options,
+            _wrappedOptions,
             _activitySource,
             _loggerMock.Object);
 
@@ -93,7 +96,7 @@ public class PoisonQueueMessageProcessorTests
             _messageQueueServiceMock.Object,
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
-            _options,
+            _wrappedOptions,
             _activitySource,
             _loggerMock.Object);
 
@@ -137,7 +140,7 @@ public class PoisonQueueMessageProcessorTests
             _messageQueueServiceMock.Object,
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
-            _options,
+            _wrappedOptions,
             _activitySource,
             _loggerMock.Object);
 
@@ -181,7 +184,7 @@ public class PoisonQueueMessageProcessorTests
             _messageQueueServiceMock.Object,
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
-            _options,
+            _wrappedOptions,
             _activitySource,
             _loggerMock.Object);
 
@@ -215,7 +218,7 @@ public class PoisonQueueMessageProcessorTests
             _messageQueueServiceMock.Object,
             _externalEndpointServiceMock.Object,
             _retryStrategyMock.Object,
-            _options,
+            _wrappedOptions,
             activitySource,
             _loggerMock.Object);
 
