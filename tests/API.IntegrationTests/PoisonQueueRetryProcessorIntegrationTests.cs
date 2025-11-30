@@ -112,16 +112,15 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         var orchestrator = _serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
 
         // Seed poison queue with test message
-        var testMessage = new QueueMessageDto
-        {
-            CorrelationId = $"test-{Guid.NewGuid()}",
-            RetryCount = 0,
-            MessageId = Guid.NewGuid().ToString(),
-            Hl7Message = "MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|123|P|2.5|||AL|NE|||||"
-        };
+        var testMessage = new QueueMessage(
+            "MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|123|P|2.5|||AL|NE|||||",
+            $"test-{Guid.NewGuid()}",
+            0,
+            DateTimeOffset.UtcNow,
+            "test-blob"
+        );
 
         var messageJson = System.Text.Json.JsonSerializer.Serialize(testMessage);
-        var base64Message = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(messageJson));
 
         // Send message to queue using the queue client
         await queueClient.EnsureQueueExistsAsync();
@@ -133,7 +132,7 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
                 "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="));
 
         var queueClientDirect = queueServiceClient.GetQueueClient("poison-queue");
-        await queueClientDirect.SendMessageAsync(base64Message);
+        await queueClientDirect.SendMessageAsync(messageJson);
 
         // Act
         await orchestrator.ProcessPoisonQueueAsync(CancellationToken.None);
@@ -154,16 +153,15 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         var orchestrator = _serviceProvider.GetRequiredService<IPoisonQueueRetryOrchestrator>();
 
         // Seed poison queue with test message that exceeds max retries
-        var testMessage = new QueueMessageDto
-        {
-            CorrelationId = $"test-{Guid.NewGuid()}",
-            RetryCount = _options.MaxRetryAttempts, // Already at max retries
-            MessageId = Guid.NewGuid().ToString(),
-            Hl7Message = "MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|123|P|2.5|||AL|NE|||||"
-        };
+        var testMessage = new QueueMessage(
+            "MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|123|P|2.5|||AL|NE|||||",
+            $"test-{Guid.NewGuid()}",
+            _options.MaxRetryAttempts, // Already at max retries
+            DateTimeOffset.UtcNow,
+            "test-blob"
+        );
 
         var messageJson = System.Text.Json.JsonSerializer.Serialize(testMessage);
-        var base64Message = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(messageJson));
 
         await queueClient.EnsureQueueExistsAsync();
 
@@ -173,7 +171,7 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
                 "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="));
 
         var queueClientDirect = queueServiceClient.GetQueueClient("poison-queue");
-        await queueClientDirect.SendMessageAsync(base64Message);
+        await queueClientDirect.SendMessageAsync(messageJson);
 
         // Act
         await orchestrator.ProcessPoisonQueueAsync(CancellationToken.None);
@@ -183,7 +181,6 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         messageQueueService.Verify(
             x => x.SendToDeadLetterQueueAsync(It.Is<DeadLetterMessage>(
                 dlm => dlm.CorrelationId == testMessage.CorrelationId &&
-                       dlm.MessageId == testMessage.MessageId &&
                        dlm.RetryCount == testMessage.RetryCount)),
             Times.Once);
 
@@ -211,17 +208,16 @@ public class PoisonQueueRetryProcessorIntegrationTests : IAsyncLifetime
         // Seed multiple messages
         for (int i = 0; i < 3; i++)
         {
-            var testMessage = new QueueMessageDto
-            {
-                CorrelationId = $"test-{Guid.NewGuid()}",
-                RetryCount = 0,
-                MessageId = Guid.NewGuid().ToString(),
-                Hl7Message = $"MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|{i}|P|2.5|||AL|NE|||||"
-            };
+            var testMessage = new QueueMessage(
+                $"MSH|^~\\&|LAB|FACILITY|APP|DEST|202411291200||ORU^R01|{i}|P|2.5|||AL|NE|||||",
+                $"test-{Guid.NewGuid()}",
+                0,
+                DateTimeOffset.UtcNow,
+                $"test-blob-{i}"
+            );
 
             var messageJson = System.Text.Json.JsonSerializer.Serialize(testMessage);
-            var base64Message = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(messageJson));
-            await queueClientDirect.SendMessageAsync(base64Message);
+            await queueClientDirect.SendMessageAsync(messageJson);
         }
 
         // Act

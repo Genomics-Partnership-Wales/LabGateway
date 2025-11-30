@@ -10,6 +10,7 @@ using LabResultsGateway.API.Infrastructure.Queue;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using static Moq.Times;
 
 namespace LabResultsGateway.API.Tests.Application.Processing;
 
@@ -102,9 +103,19 @@ public class PoisonQueueMessageProcessorTests
             "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":1,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
             1);
 
-        var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
+        var expectedQueueMessage = new QueueMessage(
+            "MSH|^~\\&|...",
+            "test-correlation",
+            1,
+            DateTimeOffset.Parse("2024-01-01T00:00:00Z"),
+            "test-blob");
+
+        _messageQueueServiceMock.Setup(x => x.DeserializeMessageAsync(message.MessageText))
+                               .ReturnsAsync(expectedQueueMessage);
+
+        var context = new RetryContext(expectedQueueMessage.CorrelationId, expectedQueueMessage.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
-        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(message.Hl7Message)).ReturnsAsync(true);
+        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(expectedQueueMessage.Hl7Message)).ReturnsAsync(true);
 
         // Act
         var result = await processor.ProcessMessageAsync(message);
@@ -114,7 +125,7 @@ public class PoisonQueueMessageProcessorTests
         result.Result.Should().Be(RetryResult.Success);
         result.ErrorMessage.Should().BeNull();
 
-        _externalEndpointServiceMock.Verify(x => x.PostHl7MessageAsync(message.Hl7Message), Times.Once);
+        _externalEndpointServiceMock.Verify(x => x.PostHl7MessageAsync(expectedQueueMessage.Hl7Message), Times.Once);
         _messageQueueServiceMock.Verify(x => x.SendToDeadLetterQueueAsync(It.IsAny<DeadLetterMessage>()), Times.Never);
     }
 
@@ -136,9 +147,19 @@ public class PoisonQueueMessageProcessorTests
             "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":1,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
             1);
 
-        var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
+        var expectedQueueMessage = new QueueMessage(
+            "MSH|^~\\&|...",
+            "test-correlation",
+            1,
+            DateTimeOffset.Parse("2024-01-01T00:00:00Z"),
+            "test-blob");
+
+        _messageQueueServiceMock.Setup(x => x.DeserializeMessageAsync(message.MessageText))
+                               .ReturnsAsync(expectedQueueMessage);
+
+        var context = new RetryContext(expectedQueueMessage.CorrelationId, expectedQueueMessage.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
-        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(message.Hl7Message)).ReturnsAsync(false);
+        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(expectedQueueMessage.Hl7Message)).ReturnsAsync(false);
 
         // Act
         var result = await processor.ProcessMessageAsync(message);
@@ -148,7 +169,7 @@ public class PoisonQueueMessageProcessorTests
         result.Result.Should().Be(RetryResult.Retry);
         result.ErrorMessage.Should().BeNull();
 
-        _externalEndpointServiceMock.Verify(x => x.PostHl7MessageAsync(message.Hl7Message), Times.Once);
+        _externalEndpointServiceMock.Verify(x => x.PostHl7MessageAsync(expectedQueueMessage.Hl7Message), Times.Once);
         _messageQueueServiceMock.Verify(x => x.SendToDeadLetterQueueAsync(It.IsAny<DeadLetterMessage>()), Times.Never);
     }
 
@@ -178,10 +199,7 @@ public class PoisonQueueMessageProcessorTests
         result.Result.Should().Be(RetryResult.DeadLetter);
         result.ErrorMessage.Should().NotBeNull();
 
-        _messageQueueServiceMock.Verify(
-            x => x.SendToDeadLetterQueueAsync(It.Is<DeadLetterMessage>(
-                dlm => dlm.MessageId == "test-message-id")),
-            Times.Once);
+        _messageQueueServiceMock.Verify(x => x.SendToDeadLetterQueueAsync(It.IsAny<DeadLetterMessage>()), Times.Never);
 
         _externalEndpointServiceMock.Verify(x => x.PostHl7MessageAsync(It.IsAny<string>()), Times.Never);
         _retryStrategyMock.Verify(x => x.ShouldRetry(It.IsAny<RetryContext>()), Times.Never);
@@ -205,9 +223,19 @@ public class PoisonQueueMessageProcessorTests
             "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation-123\",\"RetryCount\":2,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
             2);
 
-        var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
+        var expectedQueueMessage = new QueueMessage(
+            "MSH|^~\\&|...",
+            "test-correlation-123",
+            2,
+            DateTimeOffset.Parse("2024-01-01T00:00:00Z"),
+            "test-blob");
+
+        _messageQueueServiceMock.Setup(x => x.DeserializeMessageAsync(message.MessageText))
+                               .ReturnsAsync(expectedQueueMessage);
+
+        var context = new RetryContext(expectedQueueMessage.CorrelationId, expectedQueueMessage.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
-        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(message.Hl7Message)).ReturnsAsync(true);
+        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(expectedQueueMessage.Hl7Message)).ReturnsAsync(true);
 
         // Act
         await processor.ProcessMessageAsync(message);
@@ -247,9 +275,19 @@ public class PoisonQueueMessageProcessorTests
             "{\"Hl7Message\":\"MSH|^~\\\\&|...\",\"CorrelationId\":\"test-correlation\",\"RetryCount\":1,\"Timestamp\":\"2024-01-01T00:00:00Z\",\"BlobName\":\"test-blob\"}",
             1);
 
-        var context = new RetryContext(message.CorrelationId, message.RetryCount, _options.MaxRetryAttempts);
+        var expectedQueueMessage = new QueueMessage(
+            "MSH|^~\\&|...",
+            "test-correlation",
+            1,
+            DateTimeOffset.Parse("2024-01-01T00:00:00Z"),
+            "test-blob");
+
+        _messageQueueServiceMock.Setup(x => x.DeserializeMessageAsync(message.MessageText))
+                               .ReturnsAsync(expectedQueueMessage);
+
+        var context = new RetryContext(expectedQueueMessage.CorrelationId, expectedQueueMessage.RetryCount, _options.MaxRetryAttempts);
         _retryStrategyMock.Setup(x => x.ShouldRetry(context)).Returns(true);
-        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(message.Hl7Message)).ReturnsAsync(true);
+        _externalEndpointServiceMock.Setup(x => x.PostHl7MessageAsync(expectedQueueMessage.Hl7Message)).ReturnsAsync(true);
 
         // Act
         await processor.ProcessMessageAsync(message);

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using FluentAssertions;
+using LabResultsGateway.API.Application.DTOs;
 using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Processing;
 using LabResultsGateway.API.Application.Retry;
