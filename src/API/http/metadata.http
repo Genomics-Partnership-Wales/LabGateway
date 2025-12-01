@@ -1,0 +1,41 @@
+### Lab Metadata Endpoint
+### Returns lab metadata information based on lab number query parameter
+### Route: GET /api/metadata?labNumber={labNumber}
+
+# Environment Variables
+# Local development (Azure Functions default)
+@baseUrl = http://localhost:7176
+
+# Aspire Service Discovery URI (for service-to-service calls)
+# @baseUrl = https+http://_http.api
+
+# Azure deployment (update with actual URL)
+# @baseUrl = https://labgateway-api.azurewebsites.net
+
+### GET Lab Metadata - Valid Lab Number
+### Expected: 200 OK with LabMetadataDto JSON
+GET {{baseUrl}}/api/metadata?labNumber=LAB001
+Accept: application/json
+
+###
+
+### GET Lab Metadata - Another Valid Lab Number
+### Expected: 200 OK with different generated metadata
+GET {{baseUrl}}/api/metadata?labNumber=LAB002
+Accept: application/json
+
+###
+
+### GET Lab Metadata - Not Found Case
+### Expected: 404 Not Found (LAB999 is hardcoded to return NotFound)
+GET {{baseUrl}}/api/metadata?labNumber=LAB999
+Accept: application/json
+
+###
+
+### GET Lab Metadata - Missing Lab Number (Bad Request)
+### Expected: 400 Bad Request with error message
+GET {{baseUrl}}/api/metadata
+Accept: application/json
+
+###

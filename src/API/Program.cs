@@ -25,6 +25,9 @@ var builder = FunctionsApplication.CreateBuilder(args);
 
 builder.ConfigureFunctionsWebApplication();
 
+// Add Aspire service defaults for OpenTelemetry, health checks, and resilience
+builder.AddServiceDefaults();
+
 // Add Azure Key Vault configuration provider (only if KeyVaultUri is configured)
 if (!string.IsNullOrEmpty(builder.Configuration["KeyVaultUri"]))
 {
@@ -68,17 +71,27 @@ builder.Services.AddHttpClient("ExternalEndpoint", (serviceProvider, client) =>
 });
 
 // Register Azure Blob Storage client
+// Aspire injects connection strings as ConnectionStrings__blobs and ConnectionStrings__queues
+// For standalone func start, use AzureWebJobsStorage from local.settings.json
 builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
-    return new BlobServiceClient(config["StorageConnection"]!);
+    // Try Aspire connection string first, fall back to AzureWebJobsStorage
+    var connectionString = config.GetConnectionString("blobs")
+                        ?? config["AzureWebJobsStorage"]
+                        ?? "UseDevelopmentStorage=true";
+    return new BlobServiceClient(connectionString);
 });
 
 // Register Azure Queue Storage client
 builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
-    return new QueueServiceClient(config["StorageConnection"]!);
+    // Try Aspire connection string first, fall back to AzureWebJobsStorage
+    var connectionString = config.GetConnectionString("queues")
+                        ?? config["AzureWebJobsStorage"]
+                        ?? "UseDevelopmentStorage=true";
+    return new QueueServiceClient(connectionString);
 });
 
 // Register all application services as scoped
