@@ -77,7 +77,7 @@ builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
     // Try Aspire connection string first, fall back to AzureWebJobsStorage
-    var connectionString = config.GetConnectionString("blobs") 
+    var connectionString = config.GetConnectionString("blobs")
                         ?? config["AzureWebJobsStorage"]
                         ?? "UseDevelopmentStorage=true";
     return new BlobServiceClient(connectionString);
@@ -88,7 +88,7 @@ builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
     // Try Aspire connection string first, fall back to AzureWebJobsStorage
-    var connectionString = config.GetConnectionString("queues") 
+    var connectionString = config.GetConnectionString("queues")
                         ?? config["AzureWebJobsStorage"]
                         ?? "UseDevelopmentStorage=true";
     return new QueueServiceClient(connectionString);
