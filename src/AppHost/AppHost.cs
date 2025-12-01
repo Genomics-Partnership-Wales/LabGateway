@@ -15,6 +15,7 @@ var api = builder.AddAzureFunctionsProject<Projects.LabResultsGateway_API>("api"
     .WithHostStorage(storage)
     .WithReference(blobs)
     .WithReference(queues)
+    .WaitFor(storage)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/api/health");
 
