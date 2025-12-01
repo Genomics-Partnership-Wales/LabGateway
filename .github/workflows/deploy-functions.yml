@@ -1,0 +1,75 @@
+name: Deploy Azure Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/API/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/API/**"
+
+env:
+  AZURE_FUNCTIONAPP_NAME: "func-labgateway-prod"
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: "src/API"
+  DOTNET_VERSION: "10.0.x"
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-quality: "preview" # Required for .NET 10 until GA
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+        working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+      - name: Run Tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+        working-directory: tests/API.Tests
+        continue-on-error: false
+
+      - name: Publish (self-contained for .NET 10)
+        run: dotnet publish --configuration Release --output ./publish --self-contained true --runtime win-x64
+        working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: function-app
+          path: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/publish
+          retention-days: 1
+
+  deploy:
+    name: Deploy to Azure
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: function-app
+          path: ./publish
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: ./publish
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
