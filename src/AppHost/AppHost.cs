@@ -11,6 +11,8 @@ var queues = storage.AddQueues("queues");
 // Add Azure Functions project with storage references
 // This automatically configures AzureWebJobsStorage via WithHostStorage
 // and makes blob/queue connections available via WithReference
+// Note: Azure Functions automatically creates an "http" endpoint on port 7071
+// WithExternalHttpEndpoints() marks it as external for Dashboard accessibility
 var api = builder.AddAzureFunctionsProject<Projects.LabResultsGateway_API>("api")
     .WithHostStorage(storage)
     .WithReference(blobs)
