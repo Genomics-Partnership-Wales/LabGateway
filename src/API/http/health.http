@@ -1,0 +1,20 @@
+### Health Check Endpoint
+### Returns the current health status of the LabResultsGateway API service
+### Expected: 200 OK with JSON body containing status, timestamp, and service name
+
+# Environment Variables
+# Local development (Azure Functions default)
+@baseUrl = http://localhost:7176
+
+# Aspire Service Discovery URI (for service-to-service calls)
+# @baseUrl = https+http://_http.api
+
+# Azure deployment (update with actual URL)
+# @baseUrl = https://labgateway-api.azurewebsites.net
+
+### GET Health Status
+### Use for liveness/readiness probes
+GET {{baseUrl}}/api/health
+Accept: application/json
+
+###

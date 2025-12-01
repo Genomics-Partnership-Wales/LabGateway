@@ -1,0 +1,93 @@
+### HL7 Message Submission Endpoint
+### Mock endpoint to receive HL7 messages during development
+### Route: POST /api/SubmitHL7Message
+
+# Environment Variables
+# Local development (Azure Functions default)
+@baseUrl = http://localhost:7176
+
+# Aspire Service Discovery URI (for service-to-service calls)
+# @baseUrl = https+http://_http.api
+
+# Azure deployment (update with actual URL)
+# @baseUrl = https://labgateway-api.azurewebsites.net
+
+### POST Valid HL7 Message - ADT^A01 (Admit Patient)
+### Expected: 200 OK with "OK" response
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+MSH|^~\&|LAB_SYSTEM|LAB_FACILITY|EMR|HOSPITAL|20251201130000||ADT^A01|MSG00001|P|2.5
+EVN|A01|20251201130000
+PID|1||PAT001^^^HOSPITAL^MR||DOE^JOHN^A||19800101|M|||123 MAIN ST^^CARDIFF^WALES^CF10 1AA||02920000000
+PV1|1|I|WARD01^ROOM01^BED01|R|||1234^JONES^DAVID^DR|||MED||||N
+
+###
+
+### POST Valid HL7 Message - ORU^R01 (Lab Result)
+### Expected: 200 OK with "OK" response
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+MSH|^~\&|LAB_SYSTEM|LAB_FACILITY|EMR|HOSPITAL|20251201130500||ORU^R01|MSG00002|P|2.5
+PID|1||PAT002^^^HOSPITAL^MR||SMITH^JANE^B||19750315|F|||456 HIGH ST^^SWANSEA^WALES^SA1 1AA||01234567890
+OBR|1|REQ001|LAB001|CBC^Complete Blood Count|||20251201120000
+OBX|1|NM|WBC^White Blood Cell Count||7.5|10*9/L|4.0-11.0|N|||F
+OBX|2|NM|RBC^Red Blood Cell Count||4.8|10*12/L|4.0-5.5|N|||F
+OBX|3|NM|HGB^Hemoglobin||14.2|g/dL|12.0-16.0|N|||F
+
+###
+
+### POST Minimal HL7 Message
+### Expected: 200 OK - Tests basic message handling
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+MSH|^~\&|SENDER|FACILITY|RECEIVER|DEST|20251201140000||ORM^O01|MSG00003|P|2.5
+
+###
+
+### POST Empty Payload (Bad Request)
+### Expected: 400 Bad Request with "Empty HL7 payload" message
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+
+###
+
+### POST Valid HL7 Message - ORM^O01 (Order Message)
+### Expected: 200 OK with "OK" response
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+MSH|^~\&|LAB_SYSTEM|LAB_FACILITY|EMR|HOSPITAL|20251201141500||ORM^O01|MSG00004|P|2.5
+PID|1||PAT003^^^HOSPITAL^MR||WILLIAMS^DAVID^J||19650722|M|||789 OAK LANE^^NEWPORT^WALES^NP20 1AA||01633000000
+ORC|NW|ORD001|LAB003|GRP001|CM||^^^20251201150000^^R||20251201141500|USER001^OPERATOR^LAB|1234^JONES^DAVID^DR
+OBR|1|ORD001|LAB003|80053^Comprehensive Metabolic Panel|||20251201141500|||USER001||||20251201120000||1234^JONES^DAVID^DR||||||20251201150000|||F
+
+###
+
+### POST Valid HL7 Message - MDM^T02 (Document Status Change)
+### Expected: 200 OK with "OK" response
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+MSH|^~\&|LAB_SYSTEM|LAB_FACILITY|EMR|HOSPITAL|20251201142000||MDM^T02|MSG00005|P|2.5
+EVN|T02|20251201142000
+PID|1||PAT004^^^HOSPITAL^MR||EVANS^SARAH^M||19900305|F|||321 PARK AVE^^BARRY^WALES^CF62 1AA||02920111111
+TXA|1|LAB^Lab Report|TX|20251201142000|1234^JONES^DAVID^DR||20251201142000|||||DOC001||AU|||AV
+OBX|1|TX|REPORT^Lab Report||Patient test results indicate normal values.||||||F
+
+###
+
+### POST Valid HL7 Message - SIU^S12 (Scheduling Information)
+### Expected: 200 OK with "OK" response
+POST {{baseUrl}}/api/SubmitHL7Message
+Content-Type: text/plain
+
+MSH|^~\&|LAB_SYSTEM|LAB_FACILITY|EMR|HOSPITAL|20251201143000||SIU^S12|MSG00006|P|2.5
+SCH|1|APT001||||LAB^Blood Draw^LAB_SERVICES|ROUTINE|30|MIN|^^^20251205090000^20251205093000|1234^JONES^DAVID^DR|02920000001|ROOM01^Lab Room 1||CONFIRMED|1234^JONES^DAVID^DR
+PID|1||PAT005^^^HOSPITAL^MR||THOMAS^MICHAEL^R||19780815|M|||555 CHURCH ST^^PONTYPRIDD^WALES^CF37 1AA||01443000000
+AIG|1||5678^NURSE^MARY^RN^LAB||||20251205090000|30|MIN
+
+###
