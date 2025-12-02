@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy dotnet core project to Azure Function App - func-labresultsgateway
+name: Build and Deploy .NET project to Azure Function App - func-labresultsgateway
 
 on:
   push:
@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
-  DOTNET_VERSION: '10.0.x' # set this to the dotnet version to use
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: "." # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: "10.0.x" # set this to the dotnet version to use
 
 jobs:
   build-and-deploy:
@@ -21,7 +21,7 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
-      - name: 'Checkout GitHub Action'
+      - name: "Checkout GitHub Action"
         uses: actions/checkout@v4
 
       - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
@@ -29,13 +29,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: 'Resolve Project Dependencies Using Dotnet'
+      - name: "Resolve Project Dependencies Using Dotnet"
         shell: bash
         run: |
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           dotnet build --configuration Release --output ./output
           popd
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -43,11 +43,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E88BB0ED3A0440B8B6FC0E3DCFB8A693 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_52F7C026E6E542C7803458ED92F36842 }}
 
-      - name: 'Run Azure Functions Action'
+      - name: "Run Azure Functions Action"
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'func-labresultsgateway'
-          slot-name: 'Production'
-          package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          
+          app-name: "func-labresultsgateway"
+          slot-name: "Production"
+          package: "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output"
