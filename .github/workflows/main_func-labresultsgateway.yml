@@ -10,8 +10,17 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: "." # set this to the path to your web app project, defaults to the repository root
+  # Point this to the function project folder (project-level build/publish)
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: "src/API"
   DOTNET_VERSION: "10.0.x" # set this to the dotnet version to use
+
+  # Function App and resource group names - update if your environment differs
+  FUNCTIONAPP_NAME: "func-labresultsgateway"
+  RESOURCE_GROUP: "rg-labresultsgateway"
+
+  # Optional: if you want the workflow to set AzureWebJobsStorage for you,
+  # create a repo secret named AZURE_STORAGE_CONNECTION_STRING and GitHub Actions will pick it up.
+  AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
 
 jobs:
   build-and-deploy:
@@ -29,11 +38,12 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: "Resolve Project Dependencies Using Dotnet"
+      - name: "Publish Function Project"
         shell: bash
         run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
+          pushd "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}"
+          # Use project-level publish (avoid building the entire solution with --output)
+          dotnet publish --configuration Release --output ./output
           popd
 
       - name: Login to Azure
@@ -42,6 +52,47 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6BAB8AD8E1074751A75B5838C01336DC }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E88BB0ED3A0440B8B6FC0E3DCFB8A693 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_52F7C026E6E542C7803458ED92F36842 }}
+
+      - name: "Check Function App app settings and AzureWebJobsStorage presence"
+        shell: bash
+        env:
+          FUNCTIONAPP_NAME: ${{ env.FUNCTIONAPP_NAME }}
+          RESOURCE_GROUP: ${{ env.RESOURCE_GROUP }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ env.AZURE_STORAGE_CONNECTION_STRING }}
+        run: |
+          set -euo pipefail
+          echo "Listing current app settings for function app: $FUNCTIONAPP_NAME (resource group: $RESOURCE_GROUP)"
+          az functionapp config appsettings list --name "$FUNCTIONAPP_NAME" --resource-group "$RESOURCE_GROUP" --output table || {
+            echo "Could not list app settings. Please ensure the 'FUNCTIONAPP_NAME' and 'RESOURCE_GROUP' values are correct and that the logged-in principal has permission."
+            exit 0
+          }
+
+          # Check for AzureWebJobsStorage presence (returns empty if not present)
+          AZWBS_PRESENT=$(az functionapp config appsettings list \
+            --name "$FUNCTIONAPP_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --query "[?name=='AzureWebJobsStorage'] | length(@)" -o tsv || echo "0")
+
+          if [ "$AZWBS_PRESENT" = "0" ] || [ -z "$AZWBS_PRESENT" ]; then
+            echo "::warning::AzureWebJobsStorage is not present in the Function App's app settings."
+            echo "The Function runtime requires one of these app settings: AzureWebJobsStorage or AzureWebJobsStorage__accountName (for managed identity)."
+            echo "Options to fix:"
+            echo "  1) (Recommended) Use managed identity + storage account and set AzureWebJobsStorage__accountName and related settings."
+            echo "  2) Provide a storage connection string in the repo secret AZURE_STORAGE_CONNECTION_STRING and this workflow will set AzureWebJobsStorage for you."
+            if [ -n "${AZURE_STORAGE_CONNECTION_STRING:-}" ]; then
+              echo "AZURE_STORAGE_CONNECTION_STRING secret found -- setting AzureWebJobsStorage app setting now..."
+              az functionapp config appsettings set \
+                --name "$FUNCTIONAPP_NAME" \
+                --resource-group "$RESOURCE_GROUP" \
+                --settings AzureWebJobsStorage="$AZURE_STORAGE_CONNECTION_STRING" \
+                --output table
+              echo "AzureWebJobsStorage set from secret."
+            else
+              echo "No AZURE_STORAGE_CONNECTION_STRING secret detected. If you want the workflow to set AzureWebJobsStorage, add the secret AZURE_STORAGE_CONNECTION_STRING to your repository."
+            fi
+          else
+            echo "AzureWebJobsStorage is present."
+          fi
 
       - name: "Run Azure Functions Action"
         uses: Azure/functions-action@v1
