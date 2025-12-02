@@ -4,13 +4,13 @@
 
 # Environment Variables
 # Local development (Azure Functions default)
-@baseUrl = http://localhost:7176
+# @baseUrl = http://localhost:7176
 
 # Aspire Service Discovery URI (for service-to-service calls)
 # @baseUrl = https+http://_http.api
 
-# Azure deployment (update with actual URL)
-# @baseUrl = https://labgateway-api.azurewebsites.net
+# Azure Container Apps deployment
+ @baseUrl = https://api.thankfulgrass-04b7ad9d.uksouth.azurecontainerapps.io
 
 ### GET Health Status
 ### Use for liveness/readiness probes

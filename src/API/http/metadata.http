@@ -9,8 +9,8 @@
 # Aspire Service Discovery URI (for service-to-service calls)
 # @baseUrl = https+http://_http.api
 
-# Azure deployment (update with actual URL)
-# @baseUrl = https://labgateway-api.azurewebsites.net
+# Azure Container Apps deployment
+# @baseUrl = https://api.thankfulgrass-04b7ad9d.uksouth.azurecontainerapps.io
 
 ### GET Lab Metadata - Valid Lab Number
 ### Expected: 200 OK with LabMetadataDto JSON

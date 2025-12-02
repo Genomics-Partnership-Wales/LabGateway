@@ -5,6 +5,16 @@
 			"label": "Build Project",
 			"type": "shell",
 			"command": "dotnet build"
+		},
+		{
+			"label": "Build Project",
+			"type": "shell",
+			"command": "dotnet build"
+		},
+		{
+			"label": "Build Project",
+			"type": "shell",
+			"command": "dotnet build"
 		}
 	]
 }

@@ -122,7 +122,7 @@ if (-not $OutputFile -and -not $CopyToClipboard) {
 
 #region Instructions
 Write-Host "`n╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║              GitHub Secret Setup Instructions                ║" -ForegroundColor Green  
+Write-Host "║              GitHub Secret Setup Instructions                ║" -ForegroundColor Green
 Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
 
 Write-Host @"

@@ -55,25 +55,21 @@ $ErrorActionPreference = 'Stop'
 
 #region Configuration
 # Generate unique suffix for globally unique resource names
-$uniqueSuffix = (Get-FileHash -InputStream ([System.IO.MemoryStream]::new([System.Text.Encoding]::UTF8.GetBytes("labgateway-$Environment"))) -Algorithm MD5).Hash.Substring(0, 6).ToLower()
+# Using a simple hash approach compatible with Constrained Language Mode
+$hashInput = "labgateway-$Environment"
+$uniqueSuffix = ($hashInput.GetHashCode().ToString("x8")).Substring(0, 6).ToLower()
 
-# Resource naming convention
-$config = @{
-    ResourceGroup  = if ($ResourceGroupName) { $ResourceGroupName } else { "rg-labgateway-$Environment" }
-    StorageAccount = "stlabgw$Environment$uniqueSuffix"
-    FunctionApp    = "func-labgateway-$Environment"
-    AppInsights    = "appi-labgateway-$Environment"
-    AppServicePlan = "asp-labgateway-$Environment"
-    Location       = $Location
-    Environment    = $Environment
+# Build configuration values
+$rgName = if ($ResourceGroupName) { $ResourceGroupName } else { "rg-labgateway-$Environment" }
+$storageName = "stlabgw$Environment$uniqueSuffix"
+$funcName = "func-labgateway-$Environment"
+$insightsName = "appi-labgateway-$Environment"
+$aspName = "asp-labgateway-$Environment"
+$tagsValue = "environment=$Environment project=labgateway team=genomics-partnership-wales"
 
-    # Storage containers and queues
-    BlobContainers = @('lab-results', 'lab-results-processed', 'lab-results-archive')
-    Queues         = @('lab-results-queue', 'lab-results-queue-poison', 'lab-results-retry')
-
-    # Tags for resource management
-    Tags           = "environment=$Environment project=labgateway team=genomics-partnership-wales"
-}
+# Storage containers and queues
+$blobContainers = @('lab-results', 'lab-results-processed', 'lab-results-archive')
+$queues = @('lab-results-queue', 'lab-results-queue-poison', 'lab-results-retry')
 #endregion
 
 #region Helper Functions
@@ -136,12 +132,12 @@ Write-Info "Subscription: $($currentAccount.name) ($($currentAccount.id))"
 #region Display Configuration
 Write-Step "Deployment Configuration"
 Write-Host ""
-Write-Host "  Environment:        $($config.Environment)" -ForegroundColor Yellow
-Write-Host "  Location:           $($config.Location)" -ForegroundColor Yellow
-Write-Host "  Resource Group:     $($config.ResourceGroup)" -ForegroundColor Yellow
-Write-Host "  Storage Account:    $($config.StorageAccount)" -ForegroundColor Yellow
-Write-Host "  Function App:       $($config.FunctionApp)" -ForegroundColor Yellow
-Write-Host "  App Insights:       $($config.AppInsights)" -ForegroundColor Yellow
+Write-Host "  Environment:        $Environment" -ForegroundColor Yellow
+Write-Host "  Location:           $Location" -ForegroundColor Yellow
+Write-Host "  Resource Group:     $rgName" -ForegroundColor Yellow
+Write-Host "  Storage Account:    $storageName" -ForegroundColor Yellow
+Write-Host "  Function App:       $funcName" -ForegroundColor Yellow
+Write-Host "  App Insights:       $insightsName" -ForegroundColor Yellow
 Write-Host ""
 
 if (-not $SkipConfirmation) {
@@ -154,36 +150,36 @@ if (-not $SkipConfirmation) {
 #endregion
 
 #region Create Resources
-Write-Step "Creating Resource Group: $($config.ResourceGroup)"
+Write-Step "Creating Resource Group: $rgName"
 az group create `
-    --name $config.ResourceGroup `
-    --location $config.Location `
-    --tags $config.Tags `
+    --name $rgName `
+    --location $Location `
+    --tags $tagsValue `
     --output none
 Write-Success "Resource Group created"
 
-Write-Step "Creating Storage Account: $($config.StorageAccount)"
+Write-Step "Creating Storage Account: $storageName"
 az storage account create `
-    --name $config.StorageAccount `
-    --resource-group $config.ResourceGroup `
-    --location $config.Location `
+    --name $storageName `
+    --resource-group $rgName `
+    --location $Location `
     --sku Standard_LRS `
     --kind StorageV2 `
     --min-tls-version TLS1_2 `
     --allow-blob-public-access false `
-    --tags $config.Tags `
+    --tags $tagsValue `
     --output none
 Write-Success "Storage Account created"
 
 # Get storage connection string
 $storageConnectionString = az storage account show-connection-string `
-    --name $config.StorageAccount `
-    --resource-group $config.ResourceGroup `
+    --name $storageName `
+    --resource-group $rgName `
     --query connectionString `
     --output tsv
 
 Write-Step "Creating blob containers..."
-foreach ($container in $config.BlobContainers) {
+foreach ($container in $blobContainers) {
     az storage container create `
         --name $container `
         --connection-string $storageConnectionString `
@@ -192,7 +188,7 @@ foreach ($container in $config.BlobContainers) {
 }
 
 Write-Step "Creating queues..."
-foreach ($queue in $config.Queues) {
+foreach ($queue in $queues) {
     az storage queue create `
         --name $queue `
         --connection-string $storageConnectionString `
@@ -200,44 +196,44 @@ foreach ($queue in $config.Queues) {
     Write-Success "Queue created: $queue"
 }
 
-Write-Step "Creating Application Insights: $($config.AppInsights)"
+Write-Step "Creating Application Insights: $insightsName"
 az monitor app-insights component create `
-    --app $config.AppInsights `
-    --location $config.Location `
-    --resource-group $config.ResourceGroup `
+    --app $insightsName `
+    --location $Location `
+    --resource-group $rgName `
     --kind web `
     --application-type web `
-    --tags $config.Tags `
+    --tags $tagsValue `
     --output none
 Write-Success "Application Insights created"
 
 # Get Application Insights connection string
 $appInsightsConnectionString = az monitor app-insights component show `
-    --app $config.AppInsights `
-    --resource-group $config.ResourceGroup `
+    --app $insightsName `
+    --resource-group $rgName `
     --query connectionString `
     --output tsv
 
-Write-Step "Creating Function App: $($config.FunctionApp)"
+Write-Step "Creating Function App: $funcName"
 # Note: Using --runtime-version 9 as .NET 10 may not be available yet
 # Change to 10 when Azure Functions supports .NET 10 GA
 az functionapp create `
-    --name $config.FunctionApp `
-    --resource-group $config.ResourceGroup `
-    --storage-account $config.StorageAccount `
-    --consumption-plan-location $config.Location `
+    --name $funcName `
+    --resource-group $rgName `
+    --storage-account $storageName `
+    --consumption-plan-location $Location `
     --runtime dotnet-isolated `
     --runtime-version 9 `
     --functions-version 4 `
     --os-type Windows `
-    --tags $config.Tags `
+    --tags $tagsValue `
     --output none
 Write-Success "Function App created"
 
 Write-Step "Configuring Function App settings..."
 az functionapp config appsettings set `
-    --name $config.FunctionApp `
-    --resource-group $config.ResourceGroup `
+    --name $funcName `
+    --resource-group $rgName `
     --settings `
     "APPLICATIONINSIGHTS_CONNECTION_STRING=$appInsightsConnectionString" `
     "AzureWebJobsStorage=$storageConnectionString" `
@@ -249,8 +245,8 @@ Write-Success "Function App settings configured"
 
 Write-Step "Enabling Managed Identity..."
 $identity = az functionapp identity assign `
-    --name $config.FunctionApp `
-    --resource-group $config.ResourceGroup `
+    --name $funcName `
+    --resource-group $rgName `
     --query principalId `
     --output tsv
 Write-Success "Managed Identity enabled: $identity"
@@ -262,31 +258,24 @@ Write-Host "║                    Deployment Complete!                      ║
 Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
 
 Write-Host "`n📋 Resource Summary:" -ForegroundColor Cyan
-Write-Host "   Resource Group:     $($config.ResourceGroup)"
-Write-Host "   Storage Account:    $($config.StorageAccount)"
-Write-Host "   Function App:       $($config.FunctionApp)"
-Write-Host "   App Insights:       $($config.AppInsights)"
+Write-Host "   Resource Group:     $rgName"
+Write-Host "   Storage Account:    $storageName"
+Write-Host "   Function App:       $funcName"
+Write-Host "   App Insights:       $insightsName"
 Write-Host "   Managed Identity:   $identity"
 
 Write-Host "`n🔗 URLs:" -ForegroundColor Cyan
-Write-Host "   Function App:       https://$($config.FunctionApp).azurewebsites.net"
-Write-Host "   Health Endpoint:    https://$($config.FunctionApp).azurewebsites.net/api/health"
-Write-Host "   Azure Portal:       https://portal.azure.com/#resource/subscriptions/$($currentAccount.id)/resourceGroups/$($config.ResourceGroup)"
+Write-Host "   Function App:       https://$funcName.azurewebsites.net"
+Write-Host "   Health Endpoint:    https://$funcName.azurewebsites.net/api/health"
+Write-Host "   Azure Portal:       https://portal.azure.com/#resource/subscriptions/$($currentAccount.id)/resourceGroups/$rgName"
 
 Write-Host "`n📝 Next Steps:" -ForegroundColor Yellow
 Write-Host "   1. Get publish profile for GitHub Actions:"
-Write-Host "      az functionapp deployment list-publishing-profiles --name $($config.FunctionApp) --resource-group $($config.ResourceGroup) --xml"
+Write-Host "      az functionapp deployment list-publishing-profiles --name $funcName --resource-group $rgName --xml"
 Write-Host ""
 Write-Host "   2. Add the publish profile as GitHub secret: AZURE_FUNCTIONAPP_PUBLISH_PROFILE"
 Write-Host ""
 Write-Host "   3. Deploy using Azure Functions Core Tools:"
-Write-Host "      cd src/API && func azure functionapp publish $($config.FunctionApp)"
+Write-Host "      cd src/API && func azure functionapp publish $funcName"
 Write-Host ""
-
-# Export variables for use in other scripts
-$global:LabGatewayConfig = $config
-$global:LabGatewayStorageConnectionString = $storageConnectionString
-$global:LabGatewayAppInsightsConnectionString = $appInsightsConnectionString
-
-Write-Host "💡 Tip: Configuration exported to `$LabGatewayConfig variable" -ForegroundColor Gray
 #endregion

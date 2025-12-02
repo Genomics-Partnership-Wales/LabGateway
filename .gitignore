@@ -490,3 +490,4 @@ __blobstorage__/
 __queuestorage__
 __azurite_db_table__.json
 __blobstorage__/
+.azure
