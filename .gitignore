@@ -491,3 +491,6 @@ __queuestorage__
 __azurite_db_table__.json
 __blobstorage__/
 .azure
+
+# Explicitly ignore the top-level __blobstorage__ directory (anchored)
+/__blobstorage__/
