@@ -35,7 +35,11 @@ public static class PoisonQueueRetryServiceCollectionExtensions
         services.AddScoped<IAzureQueueClient>(sp =>
         {
             var config = sp.GetRequiredService<IConfiguration>();
-            var queueServiceClient = new QueueServiceClient(config["StorageConnection"]);
+            // Use the same connection string resolution as in Program.cs
+            var connectionString = config.GetConnectionString("queues")
+                                ?? config["AzureWebJobsStorage"]
+                                ?? "UseDevelopmentStorage=true";
+            var queueServiceClient = new QueueServiceClient(connectionString);
             var queueClient = queueServiceClient.GetQueueClient(config["PoisonQueueName"]);
             var logger = sp.GetRequiredService<ILogger<AzureQueueClient>>();
             return new AzureQueueClient(queueClient, logger);
@@ -55,12 +59,15 @@ public static class PoisonQueueRetryServiceCollectionExtensions
 
     private static void ValidateConfiguration(IConfiguration configuration)
     {
-        var storageConnection = configuration["StorageConnection"];
+        // Use the same connection string resolution as in Program.cs
+        var connectionString = configuration.GetConnectionString("queues")
+                            ?? configuration["AzureWebJobsStorage"]
+                            ?? "UseDevelopmentStorage=true";
         var poisonQueueName = configuration["PoisonQueueName"];
 
-        if (string.IsNullOrWhiteSpace(storageConnection))
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("StorageConnection configuration is required");
+            throw new InvalidOperationException("Storage connection configuration is required (queues connection string, AzureWebJobsStorage, or UseDevelopmentStorage=true)");
         }
 
         if (string.IsNullOrWhiteSpace(poisonQueueName))
