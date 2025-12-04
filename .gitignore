@@ -494,3 +494,4 @@ __blobstorage__/
 
 # Explicitly ignore the top-level __blobstorage__ directory (anchored)
 /__blobstorage__/
+AzuriteConfig

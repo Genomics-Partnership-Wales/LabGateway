@@ -39,8 +39,14 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.14.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.14.0" />
     <!-- Aspire Hosting packages -->
-    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.0.1" />
-    <PackageVersion Include="Aspire.Hosting.Azure.Functions" Version="13.0.1-preview.1.25575.3" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.1.0-preview.1.25603.6" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Functions" Version="13.1.0-preview.1.25603.6" />
+
+    <!-- Central package versions to satisfy generated WorkerExtensions output -->
+    <PackageVersion Include="Microsoft.NETCore.Targets" Version="3.0.0" />
+    <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.6.0" />
+    <PackageVersion Include="Microsoft.Azure.WebJobs.Extensions.Storage.Blobs" Version="5.3.6" />
+    <PackageVersion Include="Microsoft.Azure.WebJobs.Extensions.Storage.Queues" Version="5.3.6" />
 
   </ItemGroup>
 </Project>
