@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using LabResultsGateway.API.Application.DTOs;
+using LabResultsGateway.API.Application.Events;
 using LabResultsGateway.API.Application.Services;
+using LabResultsGateway.API.Domain.Events;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +16,7 @@ public class QueueMessageProcessor
 {
     private readonly IMessageQueueService _messageQueueService;
     private readonly IExternalEndpointService _externalEndpointService;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
     private readonly ILogger<QueueMessageProcessor> _logger;
     private readonly ActivitySource _activitySource;
 
@@ -22,16 +25,19 @@ public class QueueMessageProcessor
     /// </summary>
     /// <param name="messageQueueService">Service for queue operations.</param>
     /// <param name="externalEndpointService">Service for posting HL7 messages to external endpoints.</param>
+    /// <param name="domainEventDispatcher">Dispatcher for domain events.</param>
     /// <param name="logger">Logger for structured logging.</param>
     /// <param name="activitySource">Activity source for distributed tracing.</param>
     public QueueMessageProcessor(
         IMessageQueueService messageQueueService,
         IExternalEndpointService externalEndpointService,
+        IDomainEventDispatcher domainEventDispatcher,
         ILogger<QueueMessageProcessor> logger,
         ActivitySource activitySource)
     {
         _messageQueueService = messageQueueService ?? throw new ArgumentNullException(nameof(messageQueueService));
         _externalEndpointService = externalEndpointService ?? throw new ArgumentNullException(nameof(externalEndpointService));
+        _domainEventDispatcher = domainEventDispatcher ?? throw new ArgumentNullException(nameof(domainEventDispatcher));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
     }
@@ -93,12 +99,21 @@ public class QueueMessageProcessor
             _logger.LogInformation(
                 "HL7 message processed successfully. CorrelationId: {CorrelationId}",
                 queueMessage.CorrelationId);
+
+            // Raise MessageDeliveredEvent on successful external POST
+            var messageDeliveredEvent = new MessageDeliveredEvent(queueMessage.CorrelationId, "external-endpoint");
+            await _domainEventDispatcher.DispatchAsync(messageDeliveredEvent);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
                 "Failed to process HL7 message. CorrelationId: {CorrelationId}, BlobName: {BlobName}",
                 queueMessage.CorrelationId, queueMessage.BlobName);
+
+            // Raise MessageDeliveryFailedEvent on failed external POST
+            var messageDeliveryFailedEvent = new MessageDeliveryFailedEvent(
+                queueMessage.CorrelationId, ex.Message, queueMessage.RetryCount);
+            await _domainEventDispatcher.DispatchAsync(messageDeliveryFailedEvent);
 
             // Exception will cause message to go to poison queue for retry processing
             throw;

@@ -2,6 +2,8 @@ using Azure.Data.Tables;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
+using LabResultsGateway.API.Application.Events;
+using LabResultsGateway.API.Application.Events.Handlers;
 using LabResultsGateway.API.Application.Extensions;
 using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Services;
@@ -125,7 +127,14 @@ builder.Services.AddScoped<IMessageQueueService>(serviceProvider =>
     var poisonQueueName = config["PoisonQueueName"] ?? "lab-reports-poison";
     var deadLetterQueueName = config["DeadLetterQueueName"] ?? "lab-reports-dead-letter";
 
-    return new AzureQueueService(queueServiceClient, processingQueueName, poisonQueueName, deadLetterQueueName, logger);
+    // Create the inner queue service
+    var innerQueueService = new AzureQueueService(queueServiceClient, processingQueueName, poisonQueueName, deadLetterQueueName, logger);
+
+    // Wrap with outbox-aware decorator
+    var outboxService = serviceProvider.GetRequiredService<IOutboxService>();
+    var outboxLogger = serviceProvider.GetRequiredService<ILogger<OutboxAwareQueueService>>();
+
+    return new OutboxAwareQueueService(innerQueueService, outboxService, outboxLogger);
 });
 
 builder.Services.AddScoped<IBlobStorageService>(serviceProvider =>
@@ -151,6 +160,22 @@ builder.Services.Configure<IdempotencyOptions>(builder.Configuration.GetSection(
 // Register idempotency service
 builder.Services.AddScoped<IIdempotencyService, TableStorageIdempotencyService>();
 
+// Configure outbox options
+builder.Services.Configure<OutboxOptions>(builder.Configuration.GetSection("Outbox"));
+
+// Register outbox service
+builder.Services.AddScoped<IOutboxService>(serviceProvider =>
+{
+    var tableServiceClient = serviceProvider.GetRequiredService<TableServiceClient>();
+    var options = serviceProvider.GetRequiredService<IOptions<OutboxOptions>>();
+    var logger = serviceProvider.GetRequiredService<ILogger<TableStorageOutboxService>>();
+
+    var tableName = options.Value.TableName;
+    var tableClient = tableServiceClient.GetTableClient(tableName);
+
+    return new TableStorageOutboxService(tableClient, options, logger);
+});
+
 // Configure health check options
 builder.Services.Configure<HealthCheckOptions>(builder.Configuration.GetSection("HealthCheck"));
 
@@ -175,6 +200,11 @@ builder.Services.AddSingleton<MetadataApiHealthCheck>(sp =>
 
 // Register health check service
 builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
+
+// Register domain event dispatcher and handlers
+builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+builder.Services.AddScoped(typeof(IDomainEventHandler<>), typeof(AuditLoggingEventHandler<>));
+builder.Services.AddScoped(typeof(IDomainEventHandler<>), typeof(TelemetryEventHandler<>));
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()

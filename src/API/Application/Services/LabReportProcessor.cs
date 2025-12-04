@@ -1,5 +1,7 @@
 using LabResultsGateway.API.Application.DTOs;
+using LabResultsGateway.API.Application.Events;
 using LabResultsGateway.API.Domain.Entities;
+using LabResultsGateway.API.Domain.Events;
 using LabResultsGateway.API.Domain.Exceptions;
 using LabResultsGateway.API.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
@@ -15,6 +17,7 @@ public class LabReportProcessor : ILabReportProcessor
     private readonly ILabMetadataService _labMetadataService;
     private readonly IHl7MessageBuilder _hl7MessageBuilder;
     private readonly IMessageQueueService _messageQueueService;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
     private readonly ILogger<LabReportProcessor> _logger;
 
     /// <summary>
@@ -23,16 +26,19 @@ public class LabReportProcessor : ILabReportProcessor
     /// <param name="labMetadataService">Service for retrieving lab metadata.</param>
     /// <param name="hl7MessageBuilder">Service for building HL7 messages.</param>
     /// <param name="messageQueueService">Service for queue operations.</param>
+    /// <param name="domainEventDispatcher">Dispatcher for domain events.</param>
     /// <param name="logger">Logger for structured logging.</param>
     public LabReportProcessor(
         ILabMetadataService labMetadataService,
         IHl7MessageBuilder hl7MessageBuilder,
         IMessageQueueService messageQueueService,
+        IDomainEventDispatcher domainEventDispatcher,
         ILogger<LabReportProcessor> logger)
     {
         _labMetadataService = labMetadataService ?? throw new ArgumentNullException(nameof(labMetadataService));
         _hl7MessageBuilder = hl7MessageBuilder ?? throw new ArgumentNullException(nameof(hl7MessageBuilder));
         _messageQueueService = messageQueueService ?? throw new ArgumentNullException(nameof(messageQueueService));
+        _domainEventDispatcher = domainEventDispatcher ?? throw new ArgumentNullException(nameof(domainEventDispatcher));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -60,6 +66,10 @@ public class LabReportProcessor : ILabReportProcessor
                 "Starting lab report processing. BlobName: {BlobName}, CorrelationId: {CorrelationId}, PdfSize: {PdfSize} bytes",
                 blobName, correlationId, pdfContent.Length);
 
+            // Raise LabReportReceivedEvent at start of processing
+            var labReportReceivedEvent = new LabReportReceivedEvent(blobName, pdfContent.Length, correlationId);
+            await _domainEventDispatcher.DispatchAsync(labReportReceivedEvent);
+
             // Step 1: Extract LabNumber from blob name
             var labNumber = ExtractLabNumberFromBlobName(blobName);
             _logger.LogInformation(
@@ -76,6 +86,10 @@ public class LabReportProcessor : ILabReportProcessor
             _logger.LogInformation(
                 "Lab metadata retrieved successfully. LabNumber: {LabNumber}, PatientId: {PatientId}, CorrelationId: {CorrelationId}",
                 labNumber, metadata.PatientId, correlationId);
+
+            // Raise LabMetadataRetrievedEvent after successful metadata fetch
+            var labMetadataRetrievedEvent = new LabMetadataRetrievedEvent(labNumber.Value, metadata.PatientId, correlationId);
+            await _domainEventDispatcher.DispatchAsync(labMetadataRetrievedEvent);
 
             // Step 3: Create LabReport entity
             var labReport = new LabReport(
@@ -98,6 +112,10 @@ public class LabReportProcessor : ILabReportProcessor
             _logger.LogInformation(
                 "HL7 message built successfully. LabNumber: {LabNumber}, MessageLength: {MessageLength}, CorrelationId: {CorrelationId}",
                 labNumber, hl7Message.Length, correlationId);
+
+            // Raise Hl7MessageGeneratedEvent after HL7 message building
+            var hl7MessageGeneratedEvent = new Hl7MessageGeneratedEvent(labNumber.Value, hl7Message.Length, correlationId);
+            await _domainEventDispatcher.DispatchAsync(hl7MessageGeneratedEvent);
 
             // Step 5: Create queue message and queue for processing
             _logger.LogInformation(
@@ -122,6 +140,10 @@ public class LabReportProcessor : ILabReportProcessor
             _logger.LogInformation(
                 "Lab report processing completed successfully. LabNumber: {LabNumber}, CorrelationId: {CorrelationId}",
                 labNumber, correlationId);
+
+            // Raise MessageQueuedEvent after SendToProcessingQueueAsync
+            var messageQueuedEvent = new MessageQueuedEvent(correlationId, "lab-reports-queue");
+            await _domainEventDispatcher.DispatchAsync(messageQueuedEvent);
         }
         catch (LabNumberInvalidException ex)
         {
