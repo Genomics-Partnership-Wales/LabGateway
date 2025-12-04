@@ -76,14 +76,14 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-001 | Create `src/API/Domain/Events/IDomainEvent.cs` marker interface with Timestamp and CorrelationId properties | ⬜ | |
-| TASK-002 | Create `src/API/Domain/Events/DomainEventBase.cs` abstract base class implementing IDomainEvent with auto-generated timestamp | ⬜ | |
-| TASK-003 | Create `src/API/Domain/Events/LabReportReceivedEvent.cs` with properties: BlobName, ContentSize, CorrelationId | ⬜ | |
-| TASK-004 | Create `src/API/Domain/Events/LabMetadataRetrievedEvent.cs` with properties: LabNumber, PatientId, CorrelationId | ⬜ | |
-| TASK-005 | Create `src/API/Domain/Events/Hl7MessageGeneratedEvent.cs` with properties: LabNumber, MessageLength, CorrelationId | ⬜ | |
-| TASK-006 | Create `src/API/Domain/Events/MessageQueuedEvent.cs` with properties: QueueName, CorrelationId, Timestamp | ⬜ | |
-| TASK-007 | Create `src/API/Domain/Events/MessageDeliveryFailedEvent.cs` with properties: CorrelationId, ErrorMessage, RetryCount | ⬜ | |
-| TASK-008 | Create `src/API/Domain/Events/MessageDeliveredEvent.cs` with properties: CorrelationId, ExternalEndpoint, Timestamp | ⬜ | |
+| TASK-001 | Create `src/API/Domain/Events/IDomainEvent.cs` marker interface with Timestamp and CorrelationId properties | ✅ | 2025-12-04 |
+| TASK-002 | Create `src/API/Domain/Events/DomainEventBase.cs` abstract base class implementing IDomainEvent with auto-generated timestamp | ✅ | 2025-12-04 |
+| TASK-003 | Create `src/API/Domain/Events/LabReportReceivedEvent.cs` with properties: BlobName, ContentSize, CorrelationId | ✅ | 2025-12-04 |
+| TASK-004 | Create `src/API/Domain/Events/LabMetadataRetrievedEvent.cs` with properties: LabNumber, PatientId, CorrelationId | ✅ | 2025-12-04 |
+| TASK-005 | Create `src/API/Domain/Events/Hl7MessageGeneratedEvent.cs` with properties: LabNumber, MessageLength, CorrelationId | ✅ | 2025-12-04 |
+| TASK-006 | Create `src/API/Domain/Events/MessageQueuedEvent.cs` with properties: QueueName, CorrelationId, Timestamp | ✅ | 2025-12-04 |
+| TASK-007 | Create `src/API/Domain/Events/MessageDeliveryFailedEvent.cs` with properties: CorrelationId, ErrorMessage, RetryCount | ✅ | 2025-12-04 |
+| TASK-008 | Create `src/API/Domain/Events/MessageDeliveredEvent.cs` with properties: CorrelationId, ExternalEndpoint, Timestamp | ✅ | 2025-12-04 |
 
 ### Phase 2: Domain Event Dispatcher
 
@@ -91,12 +91,12 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-009 | Create `src/API/Application/Events/IDomainEventHandler.cs` generic interface with `Task HandleAsync(TEvent event)` method | ⬜ | |
-| TASK-010 | Create `src/API/Application/Events/IDomainEventDispatcher.cs` interface with `Task DispatchAsync(IDomainEvent event)` method | ⬜ | |
-| TASK-011 | Create `src/API/Application/Events/DomainEventDispatcher.cs` resolving handlers from DI container and dispatching events | ⬜ | |
-| TASK-012 | Create `src/API/Application/Events/Handlers/AuditLoggingEventHandler.cs` logging all events with structured data | ⬜ | |
-| TASK-013 | Create `src/API/Application/Events/Handlers/TelemetryEventHandler.cs` recording Application Insights custom events | ⬜ | |
-| TASK-014 | Register IDomainEventDispatcher and event handlers in `Program.cs` with appropriate lifetimes | ⬜ | |
+| TASK-009 | Create `src/API/Application/Events/IDomainEventHandler.cs` generic interface with `Task HandleAsync(TEvent event)` method | ✅ | 2025-12-04 |
+| TASK-010 | Create `src/API/Application/Events/IDomainEventDispatcher.cs` interface with `Task DispatchAsync(IDomainEvent event)` method | ✅ | 2025-12-04 |
+| TASK-011 | Create `src/API/Application/Events/DomainEventDispatcher.cs` resolving handlers from DI container and dispatching events | ✅ | 2025-12-04 |
+| TASK-012 | Create `src/API/Application/Events/Handlers/AuditLoggingEventHandler.cs` logging all events with structured data | ✅ | 2025-12-04 |
+| TASK-013 | Create `src/API/Application/Events/Handlers/TelemetryEventHandler.cs` recording Application Insights custom events | ✅ | 2025-12-04 |
+| TASK-014 | Register IDomainEventDispatcher and event handlers in `Program.cs` with appropriate lifetimes | ✅ | 2025-12-04 |
 
 ### Phase 3: Integrate Domain Events into Processing Flow
 
@@ -104,14 +104,14 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-015 | Inject IDomainEventDispatcher into LabReportProcessor constructor | ⬜ | |
-| TASK-016 | Raise LabReportReceivedEvent at start of ProcessLabReportAsync | ⬜ | |
-| TASK-017 | Raise LabMetadataRetrievedEvent after successful metadata fetch | ⬜ | |
-| TASK-018 | Raise Hl7MessageGeneratedEvent after HL7 message building | ⬜ | |
-| TASK-019 | Raise MessageQueuedEvent after SendToProcessingQueueAsync | ⬜ | |
-| TASK-020 | Inject IDomainEventDispatcher into QueueMessageProcessor | ⬜ | |
-| TASK-021 | Raise MessageDeliveredEvent on successful external POST | ⬜ | |
-| TASK-022 | Raise MessageDeliveryFailedEvent on failed external POST | ⬜ | |
+| TASK-015 | Inject IDomainEventDispatcher into LabReportProcessor constructor | ✅ | 2025-12-04 |
+| TASK-016 | Raise LabReportReceivedEvent at start of ProcessLabReportAsync | ✅ | 2025-12-04 |
+| TASK-017 | Raise LabMetadataRetrievedEvent after successful metadata fetch | ✅ | 2025-12-04 |
+| TASK-018 | Raise Hl7MessageGeneratedEvent after HL7 message building | ✅ | 2025-12-04 |
+| TASK-019 | Raise MessageQueuedEvent after SendToProcessingQueueAsync | ✅ | 2025-12-04 |
+| TASK-020 | Inject IDomainEventDispatcher into QueueMessageProcessor | ✅ | 2025-12-04 |
+| TASK-021 | Raise MessageDeliveredEvent on successful external POST | ✅ | 2025-12-04 |
+| TASK-022 | Raise MessageDeliveryFailedEvent on failed external POST | ✅ | 2025-12-04 |
 
 ### Phase 4: Outbox Pattern Infrastructure
 
@@ -119,13 +119,13 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-023 | Create `src/API/Domain/Entities/OutboxMessage.cs` entity with properties: Id, MessageType, Payload, Status, CreatedAt, DispatchedAt, RetryCount, CorrelationId | ⬜ | |
-| TASK-024 | Create `src/API/Domain/Enums/OutboxStatus.cs` enum: Pending, Dispatched, Failed, Abandoned | ⬜ | |
-| TASK-025 | Create `src/API/Application/Options/OutboxOptions.cs` configuration: TableName, MaxRetries, RetryDelaySeconds, CleanupRetentionDays | ⬜ | |
-| TASK-026 | Create `src/API/Application/Services/IOutboxService.cs` interface with methods: `Task AddMessageAsync(string type, string payload)`, `Task<IList<OutboxMessage>> GetPendingMessagesAsync()`, `Task MarkAsDispatchedAsync(string id)`, `Task MarkAsFailedAsync(string id, string error)` | ⬜ | |
-| TASK-027 | Create `src/API/Infrastructure/Storage/TableStorageOutboxService.cs` implementing IOutboxService with Azure Table Storage | ⬜ | |
-| TASK-028 | Register IOutboxService in `Program.cs` with configuration binding | ⬜ | |
-| TASK-029 | Add outbox configuration to `local.settings.json`: OutboxTableName, OutboxMaxRetries, OutboxRetryDelaySeconds | ⬜ | |
+| TASK-023 | Create `src/API/Domain/Entities/OutboxMessage.cs` entity with properties: Id, MessageType, Payload, Status, CreatedAt, DispatchedAt, RetryCount, CorrelationId | ✅ | 2025-12-04 |
+| TASK-024 | Create `src/API/Domain/Enums/OutboxStatus.cs` enum: Pending, Dispatched, Failed, Abandoned | ✅ | 2025-12-04 |
+| TASK-025 | Create `src/API/Application/Options/OutboxOptions.cs` configuration: TableName, MaxRetries, RetryDelaySeconds, CleanupRetentionDays | ✅ | 2025-12-04 |
+| TASK-026 | Create `src/API/Application/Services/IOutboxService.cs` interface with methods: `Task AddMessageAsync(string type, string payload)`, `Task<IList<OutboxMessage>> GetPendingMessagesAsync()`, `Task MarkAsDispatchedAsync(string id)`, `Task MarkAsFailedAsync(string id, string error)` | ✅ | 2025-12-04 |
+| TASK-027 | Create `src/API/Infrastructure/Storage/TableStorageOutboxService.cs` implementing IOutboxService with Azure Table Storage | ✅ | 2025-12-04 |
+| TASK-028 | Register IOutboxService in `Program.cs` with configuration binding | ✅ | 2025-12-04 |
+| TASK-029 | Add outbox configuration to `local.settings.json`: OutboxTableName, OutboxMaxRetries, OutboxRetryDelaySeconds | ✅ | 2025-12-04 |
 
 ### Phase 5: Outbox-Aware Message Queue Service
 
@@ -133,13 +133,13 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-030 | Create `src/API/Infrastructure/Messaging/OutboxAwareQueueService.cs` decorator implementing IMessageQueueService | ⬜ | |
-| TASK-031 | Modify OutboxAwareQueueService.SendToProcessingQueueAsync to write to outbox first, then dispatch | ⬜ | |
-| TASK-032 | Add transaction-like semantics: if dispatch fails, message remains in outbox as pending | ⬜ | |
-| TASK-033 | Create `src/API/Functions/OutboxDispatcherFunction.cs` timer-triggered function (every 30 seconds) | ⬜ | |
-| TASK-034 | Implement OutboxDispatcherFunction to process pending outbox messages with retry logic | ⬜ | |
-| TASK-035 | Add exponential backoff calculation for failed messages in OutboxDispatcherFunction | ⬜ | |
-| TASK-036 | Implement cleanup logic for old dispatched messages based on retention period | ⬜ | |
+| TASK-030 | Create `src/API/Infrastructure/Messaging/OutboxAwareQueueService.cs` decorator implementing IMessageQueueService | ✅ | 2025-12-04 |
+| TASK-031 | Modify OutboxAwareQueueService.SendToProcessingQueueAsync to write to outbox first, then dispatch | ✅ | 2025-12-04 |
+| TASK-032 | Add transaction-like semantics: if dispatch fails, message remains in outbox as pending | ✅ | 2025-12-04 |
+| TASK-033 | Create `src/API/Functions/OutboxDispatcherFunction.cs` timer-triggered function (every 30 seconds) | ✅ | 2025-12-04 |
+| TASK-034 | Implement OutboxDispatcherFunction to process pending outbox messages with retry logic | ✅ | 2025-12-04 |
+| TASK-035 | Add exponential backoff calculation for failed messages in OutboxDispatcherFunction | ✅ | 2025-12-04 |
+| TASK-036 | Implement cleanup logic for old dispatched messages based on retention period | ✅ | 2025-12-04 |
 
 ### Phase 6: Testing and Documentation
 
