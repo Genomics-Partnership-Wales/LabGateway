@@ -32,6 +32,18 @@ public class TableStorageOutboxService : IOutboxService
         _tableClient = tableClient ?? throw new ArgumentNullException(nameof(tableClient));
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        // Ensure the table exists - this is a synchronous call that handles async internally
+        try
+        {
+            _tableClient.CreateIfNotExists();
+            _logger.LogInformation("Ensured outbox table '{TableName}' exists", _tableClient.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create outbox table '{TableName}'", _tableClient.Name);
+            throw;
+        }
     }
 
     /// <inheritdoc/>
