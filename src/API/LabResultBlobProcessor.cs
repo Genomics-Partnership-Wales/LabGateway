@@ -1,7 +1,10 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Domain.Constants;
+using LabResultsGateway.API.Domain.Entities;
 using LabResultsGateway.API.Domain.Exceptions;
+using LabResultsGateway.API.Domain.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +18,7 @@ public class LabResultBlobProcessor
 {
     private readonly ILabReportProcessor _labReportProcessor;
     private readonly IBlobStorageService _blobStorageService;
+    private readonly IIdempotencyService _idempotencyService;
     private readonly ActivitySource _activitySource;
     private readonly ILogger<LabResultBlobProcessor> _logger;
 
@@ -23,16 +27,19 @@ public class LabResultBlobProcessor
     /// </summary>
     /// <param name="labReportProcessor">Service for processing lab reports.</param>
     /// <param name="blobStorageService">Service for blob storage operations.</param>
+    /// <param name="idempotencyService">Service for checking idempotency of blob processing.</param>
     /// <param name="activitySource">Activity source for OpenTelemetry tracing.</param>
     /// <param name="logger">Logger for tracking operations.</param>
     public LabResultBlobProcessor(
         ILabReportProcessor labReportProcessor,
         IBlobStorageService blobStorageService,
+        IIdempotencyService idempotencyService,
         ActivitySource activitySource,
         ILogger<LabResultBlobProcessor> logger)
     {
         _labReportProcessor = labReportProcessor ?? throw new ArgumentNullException(nameof(labReportProcessor));
         _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
+        _idempotencyService = idempotencyService ?? throw new ArgumentNullException(nameof(idempotencyService));
         _activitySource = activitySource ?? throw new ArgumentNullException(nameof(activitySource));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -61,14 +68,27 @@ public class LabResultBlobProcessor
             return;
         }
 
+        var pdfBytes = await ReadStreamContentAsync(stream, cancellationToken);
+        var contentHash = ComputeContentHash(pdfBytes);
+
         try
         {
-            var pdfBytes = await ReadStreamContentAsync(stream, cancellationToken);
+            // Check for idempotency to avoid reprocessing duplicate blobs
+            if (await _idempotencyService.HasBeenProcessedAsync(name, contentHash))
+            {
+                _logger.LogInformation("Blob {BlobName} has already been processed (idempotency check). CorrelationId: {CorrelationId}",
+                    name, correlationId);
+                activity?.SetStatus(ActivityStatusCode.Ok, "Already processed");
+                return;
+            }
 
             _logger.LogInformation("Starting lab report processing. BlobName: {BlobName}, CorrelationId: {CorrelationId}, Size: {Size} bytes",
                 name, correlationId, pdfBytes.Length);
 
             await _labReportProcessor.ProcessLabReportAsync(name, pdfBytes, cancellationToken);
+
+            // Mark as processed successfully
+            await _idempotencyService.MarkAsProcessedAsync(name, contentHash, ProcessingOutcome.Success);
 
             _logger.LogInformation("Lab report processed successfully. BlobName: {BlobName}, CorrelationId: {CorrelationId}",
                 name, correlationId);
@@ -76,11 +96,11 @@ public class LabResultBlobProcessor
         }
         catch (LabProcessingException ex)
         {
-            await HandleLabProcessingExceptionAsync(ex, name, correlationId, activity, cancellationToken);
+            await HandleLabProcessingExceptionAsync(ex, name, contentHash, correlationId, activity, cancellationToken);
         }
         catch (Exception ex)
         {
-            await HandleUnexpectedExceptionAsync(ex, name, correlationId, activity, cancellationToken);
+            await HandleUnexpectedExceptionAsync(ex, name, contentHash, correlationId, activity, cancellationToken);
         }
     }
 
@@ -106,16 +126,29 @@ public class LabResultBlobProcessor
     }
 
     /// <summary>
+    /// Computes a SHA-256 hash of the content for idempotency checking.
+    /// </summary>
+    /// <param name="content">The content to hash.</param>
+    /// <returns>The computed hash as a byte array.</returns>
+    private static byte[] ComputeContentHash(byte[] content)
+    {
+        using var sha256 = SHA256.Create();
+        return sha256.ComputeHash(content);
+    }
+
+    /// <summary>
     /// Handles domain-specific lab processing exceptions.
     /// </summary>
     /// <param name="ex">The lab processing exception.</param>
     /// <param name="blobName">The name of the blob.</param>
+    /// <param name="contentHash">The hash of the blob content.</param>
     /// <param name="correlationId">The correlation ID for tracing.</param>
     /// <param name="activity">The current activity for OpenTelemetry.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     private async Task HandleLabProcessingExceptionAsync(
         LabProcessingException ex,
         string blobName,
+        byte[] contentHash,
         string correlationId,
         Activity? activity,
         CancellationToken cancellationToken)
@@ -124,6 +157,7 @@ public class LabResultBlobProcessor
             ex.GetType().Name, blobName, correlationId, ex.IsRetryable);
 
         await _blobStorageService.MoveToFailedFolderAsync(blobName, cancellationToken);
+        await _idempotencyService.MarkAsProcessedAsync(blobName, contentHash, ProcessingOutcome.Failed);
         activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
     }
 
@@ -132,12 +166,14 @@ public class LabResultBlobProcessor
     /// </summary>
     /// <param name="ex">The unexpected exception.</param>
     /// <param name="blobName">The name of the blob.</param>
+    /// <param name="contentHash">The hash of the blob content.</param>
     /// <param name="correlationId">The correlation ID for tracing.</param>
     /// <param name="activity">The current activity for OpenTelemetry.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     private async Task HandleUnexpectedExceptionAsync(
         Exception ex,
         string blobName,
+        byte[] contentHash,
         string correlationId,
         Activity? activity,
         CancellationToken cancellationToken)
@@ -146,6 +182,7 @@ public class LabResultBlobProcessor
             blobName, correlationId);
 
         await _blobStorageService.MoveToFailedFolderAsync(blobName, cancellationToken);
+        await _idempotencyService.MarkAsProcessedAsync(blobName, contentHash, ProcessingOutcome.Failed);
         // TODO: Send to poison queue with retry count 0 based on queue message format decision
         activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
     }

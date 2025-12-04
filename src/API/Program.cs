@@ -1,8 +1,11 @@
+using Azure.Data.Tables;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Queues;
 using LabResultsGateway.API.Application.Extensions;
+using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Services;
+using LabResultsGateway.API.Domain.Interfaces;
 using LabResultsGateway.API.Infrastructure.ExternalServices;
 using LabResultsGateway.API.Infrastructure.Hl7;
 using LabResultsGateway.API.Infrastructure.Messaging;
@@ -94,6 +97,17 @@ builder.Services.AddSingleton(serviceProvider =>
     return new QueueServiceClient(connectionString);
 });
 
+// Register Azure Table Storage client
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var config = serviceProvider.GetRequiredService<IConfiguration>();
+    // Try Aspire connection string first, fall back to AzureWebJobsStorage
+    var connectionString = config.GetConnectionString("tables")
+                        ?? config["AzureWebJobsStorage"]
+                        ?? "UseDevelopmentStorage=true";
+    return new TableServiceClient(connectionString);
+});
+
 // Register all application services as scoped
 builder.Services.AddScoped<ILabMetadataService, LabMetadataApiClient>();
 builder.Services.AddScoped<IHl7MessageBuilder, Hl7MessageBuilder>();
@@ -128,6 +142,12 @@ builder.Services.AddScoped<IExternalEndpointService, ExternalEndpointService>();
 
 // Register poison queue retry services
 builder.Services.AddPoisonQueueRetryServices(builder.Configuration);
+
+// Configure idempotency options
+builder.Services.Configure<IdempotencyOptions>(builder.Configuration.GetSection("Idempotency"));
+
+// Register idempotency service
+builder.Services.AddScoped<IIdempotencyService, TableStorageIdempotencyService>();
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
