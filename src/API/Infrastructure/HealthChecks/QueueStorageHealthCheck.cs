@@ -1,7 +1,7 @@
 using Azure.Storage.Queues;
 using LabResultsGateway.Application.DTOs;
 
-namespace LabResultsGateway.Infrastructure.HealthChecks;
+namespace LabResultsGateway.API.Infrastructure.HealthChecks;
 
 public class QueueStorageHealthCheck
 {

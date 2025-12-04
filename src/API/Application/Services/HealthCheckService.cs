@@ -1,6 +1,6 @@
 using LabResultsGateway.Application.DTOs;
 using LabResultsGateway.Application.Options;
-using LabResultsGateway.Infrastructure.HealthChecks;
+using LabResultsGateway.API.Infrastructure.HealthChecks;
 using Microsoft.Extensions.Options;
 
 namespace LabResultsGateway.Application.Services;

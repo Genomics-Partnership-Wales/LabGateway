@@ -1,7 +1,7 @@
 using System.Net.Http;
 using LabResultsGateway.Application.DTOs;
 
-namespace LabResultsGateway.Infrastructure.HealthChecks;
+namespace LabResultsGateway.API.Infrastructure.HealthChecks;
 
 public class MetadataApiHealthCheck
 {

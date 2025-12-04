@@ -1,6 +1,12 @@
 using LabResultsGateway.Domain.ValueObjects;
 
-namespace LabResultsGateway.Domain.Entities;
+namespace LabResultsGateway.API.Domain.Entities;
+
+public enum ProcessingOutcome
+{
+    Success,
+    Failed
+}
 
 public class ProcessingRecord
 {
