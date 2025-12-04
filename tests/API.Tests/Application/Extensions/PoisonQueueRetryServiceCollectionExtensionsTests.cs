@@ -70,7 +70,7 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void AddPoisonQueueRetryServices_ThrowsInvalidOperationException_WhenStorageConnectionIsMissing()
+    public void AddPoisonQueueRetryServices_DoesNotThrow_WhenUsingDefaultDevelopmentStorage()
     {
         // Arrange
         var services = new ServiceCollection();
@@ -78,16 +78,13 @@ public class PoisonQueueRetryServiceCollectionExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["PoisonQueueRetry:MaxMessagesPerBatch"] = "10",
-                // ["StorageConnection"] = "UseDevelopmentStorage=true", // Missing
+                // No connection string provided - should default to UseDevelopmentStorage=true
                 ["PoisonQueueName"] = "poison-queue"
             })
             .Build();
 
-        // Act & Assert
-        var exception = Assert.Throws<InvalidOperationException>(
-            () => services.AddPoisonQueueRetryServices(configuration));
-
-        exception.Message.Should().Contain("StorageConnection");
+        // Act & Assert - Should not throw
+        services.AddPoisonQueueRetryServices(configuration);
     }
 
     [Fact]

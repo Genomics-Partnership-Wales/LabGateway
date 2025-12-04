@@ -1,4 +1,4 @@
-namespace LabResultsGateway.Application.Options;
+namespace LabResultsGateway.API.Application.Options;
 
 public class HealthCheckOptions
 {

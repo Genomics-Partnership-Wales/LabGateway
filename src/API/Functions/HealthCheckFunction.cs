@@ -1,7 +1,7 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using LabResultsGateway.Application.Services;
+using LabResultsGateway.API.Application.Services;
 using System.Net;
 
 namespace LabResultsGateway.API.Functions;

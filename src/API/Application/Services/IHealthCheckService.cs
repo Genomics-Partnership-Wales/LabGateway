@@ -1,6 +1,6 @@
 using LabResultsGateway.Application.DTOs;
 
-namespace LabResultsGateway.Application.Services;
+namespace LabResultsGateway.API.Application.Services;
 
 public interface IHealthCheckService
 {

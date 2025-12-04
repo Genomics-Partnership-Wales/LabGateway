@@ -1,9 +1,9 @@
 using LabResultsGateway.Application.DTOs;
-using LabResultsGateway.Application.Options;
+using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Infrastructure.HealthChecks;
 using Microsoft.Extensions.Options;
 
-namespace LabResultsGateway.Application.Services;
+namespace LabResultsGateway.API.Application.Services;
 
 public class HealthCheckService : IHealthCheckService
 {
@@ -44,7 +44,7 @@ public class HealthCheckService : IHealthCheckService
 
         // Determine overall status
         var unhealthyCount = components.Count(c => c.Status == "Unhealthy");
-        var status = unhealthyCount == 0 ? "Healthy" : 
+        var status = unhealthyCount == 0 ? "Healthy" :
                     unhealthyCount == components.Count ? "Unhealthy" : "Degraded";
 
         return new HealthCheckResult

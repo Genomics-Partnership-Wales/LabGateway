@@ -43,20 +43,24 @@ public class TableStorageIdempotencyService : IIdempotencyService
         await tableClient.CreateIfNotExistsAsync();
 
         var hashString = Convert.ToBase64String(contentHash);
-        var entity = await tableClient.GetEntityIfExistsAsync<TableEntity>(blobName, hashString);
+        var response = await tableClient.GetEntityIfExistsAsync<TableEntity>(blobName, hashString);
 
-        if (entity.HasValue)
+        if (response.HasValue)
         {
-            var processedAtString = entity.Value!.GetString("ProcessedAt");
-            if (processedAtString != null)
+            var entity = response.Value;
+            if (entity != null)
             {
-                var processedAt = DateTimeOffset.Parse(processedAtString);
-                if (DateTimeOffset.UtcNow - processedAt < TimeSpan.FromHours(_options.TTLHours))
+                var processedAtString = entity.GetString("ProcessedAt");
+                if (processedAtString != null)
                 {
-                    _logger.LogInformation("Blob {BlobName} has already been processed", blobName);
-                    _idempotencyHits.Add(1);
-                    activity?.SetTag("idempotency.result", "hit");
-                    return true;
+                    var processedAt = DateTimeOffset.Parse(processedAtString);
+                    if (DateTimeOffset.UtcNow - processedAt < TimeSpan.FromHours(_options.TTLHours))
+                    {
+                        _logger.LogInformation("Blob {BlobName} has already been processed", blobName);
+                        _idempotencyHits.Add(1);
+                        activity?.SetTag("idempotency.result", "hit");
+                        return true;
+                    }
                 }
             }
         }
