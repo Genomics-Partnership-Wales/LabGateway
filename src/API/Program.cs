@@ -7,6 +7,7 @@ using LabResultsGateway.API.Application.Options;
 using LabResultsGateway.API.Application.Services;
 using LabResultsGateway.API.Domain.Interfaces;
 using LabResultsGateway.API.Infrastructure.ExternalServices;
+using LabResultsGateway.API.Infrastructure.HealthChecks;
 using LabResultsGateway.API.Infrastructure.Hl7;
 using LabResultsGateway.API.Infrastructure.Messaging;
 using LabResultsGateway.API.Infrastructure.Storage;
@@ -148,6 +149,31 @@ builder.Services.Configure<IdempotencyOptions>(builder.Configuration.GetSection(
 
 // Register idempotency service
 builder.Services.AddScoped<IIdempotencyService, TableStorageIdempotencyService>();
+
+// Configure health check options
+builder.Services.Configure<HealthCheckOptions>(builder.Configuration.GetSection("HealthCheck"));
+
+// Register health check components
+builder.Services.AddSingleton<BlobStorageHealthCheck>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<HealthCheckOptions>>().Value;
+    return new BlobStorageHealthCheck(options.BlobStorageConnection);
+});
+
+builder.Services.AddSingleton<QueueStorageHealthCheck>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<HealthCheckOptions>>().Value;
+    return new QueueStorageHealthCheck(options.QueueStorageConnection);
+});
+
+builder.Services.AddSingleton<MetadataApiHealthCheck>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<HealthCheckOptions>>().Value;
+    return new MetadataApiHealthCheck(options.MetadataApiUrl);
+});
+
+// Register health check service
+builder.Services.AddScoped<IHealthCheckService, HealthCheckService>();
 
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()

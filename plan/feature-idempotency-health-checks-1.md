@@ -2,9 +2,9 @@
 goal: Implement Idempotency Service and Health Check Endpoints for Lab Results Gateway
 version: 1.0
 date_created: 2025-11-27
-last_updated: 2025-11-27
+last_updated: 2025-12-04
 owner: Development Team
-status: 'Pending'
+status: 'In Progress'
 priority: 'High'
 tags: [feature, reliability, resilience, idempotency, health-checks, azure-functions]
 ---
@@ -71,14 +71,14 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-001 | Create `src/API/Domain/Interfaces/IIdempotencyService.cs` interface with methods: `Task<bool> HasBeenProcessedAsync(string blobName, byte[] contentHash)`, `Task MarkAsProcessedAsync(string blobName, byte[] contentHash, ProcessingOutcome outcome)` | ⬜ | |
+| TASK-001 | Create `src/API/Domain/Interfaces/IIdempotencyService.cs` interface with methods: `Task<bool> HasBeenProcessedAsync(string blobName, byte[] contentHash)`, `Task MarkAsProcessedAsync(string blobName, byte[] contentHash, ProcessingOutcome outcome)` | ✅ | 2025-12-04 |
 | TASK-002 | Create `src/API/Domain/ValueObjects/IdempotencyKey.cs` value object combining blob name and content hash with validation | ⬜ | |
 | TASK-003 | Create `src/API/Domain/Entities/ProcessingRecord.cs` entity representing a processed blob with properties: IdempotencyKey, BlobName, ContentHash, ProcessedAt, Outcome, CorrelationId | ⬜ | |
-| TASK-004 | Create `src/API/Application/Options/IdempotencyOptions.cs` configuration class with properties: TableName, TTLHours, StorageConnection | ⬜ | |
-| TASK-005 | Create `src/API/Infrastructure/Storage/TableStorageIdempotencyService.cs` implementing IIdempotencyService with Azure Table Storage operations | ⬜ | |
-| TASK-006 | Add Azure.Data.Tables NuGet package reference to `LabResultsGateway.API.csproj` | ⬜ | |
-| TASK-007 | Register TableServiceClient and IIdempotencyService in `Program.cs` with configuration binding | ⬜ | |
-| TASK-008 | Add idempotency configuration to `local.settings.json`: IdempotencyTableName, IdempotencyTTLHours | ⬜ | |
+| TASK-004 | Create `src/API/Application/Options/IdempotencyOptions.cs` configuration class with properties: TableName, TTLHours, StorageConnection | ✅ | 2025-12-04 |
+| TASK-005 | Create `src/API/Infrastructure/Storage/TableStorageIdempotencyService.cs` implementing IIdempotencyService with Azure Table Storage operations | ✅ | 2025-12-04 |
+| TASK-006 | Add Azure.Data.Tables NuGet package reference to `LabResultsGateway.API.csproj` | ✅ | 2025-12-04 |
+| TASK-007 | Register TableServiceClient and IIdempotencyService in `Program.cs` with configuration binding | ✅ | 2025-12-04 |
+| TASK-008 | Add idempotency configuration to `local.settings.json`: IdempotencyTableName, IdempotencyTTLHours | ✅ | 2025-12-04 |
 
 ### Phase 2: Integrate Idempotency into Blob Processor
 
@@ -86,11 +86,11 @@ This implementation plan defines the architecture and implementation steps for a
 
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
-| TASK-009 | Inject IIdempotencyService into LabResultBlobProcessor constructor | ⬜ | |
-| TASK-010 | Compute SHA256 content hash from PDF bytes in LabResultBlobProcessor.Run | ⬜ | |
-| TASK-011 | Check idempotency before processing: if already processed, log and return early | ⬜ | |
-| TASK-012 | Mark blob as processed after successful processing with ProcessingOutcome.Success | ⬜ | |
-| TASK-013 | Mark blob with ProcessingOutcome.Failed on exception before moving to Failed folder | ⬜ | |
+| TASK-009 | Inject IIdempotencyService into LabResultBlobProcessor constructor | ✅ | 2025-12-04 |
+| TASK-010 | Compute SHA256 content hash from PDF bytes in LabResultBlobProcessor.Run | ✅ | 2025-12-04 |
+| TASK-011 | Check idempotency before processing: if already processed, log and return early | ✅ | 2025-12-04 |
+| TASK-012 | Mark blob as processed after successful processing with ProcessingOutcome.Success | ✅ | 2025-12-04 |
+| TASK-013 | Mark blob with ProcessingOutcome.Failed on exception before moving to Failed folder | ✅ | 2025-12-04 |
 | TASK-014 | Add telemetry metrics for idempotency hits (skipped) vs misses (processed) | ⬜ | |
 
 ### Phase 3: Health Check Infrastructure
