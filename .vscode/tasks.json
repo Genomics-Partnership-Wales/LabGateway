@@ -1,20 +1,40 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Build Project",
-			"type": "shell",
-			"command": "dotnet build"
-		},
-		{
-			"label": "Build Project",
-			"type": "shell",
-			"command": "dotnet build"
-		},
-		{
-			"label": "Build Project",
-			"type": "shell",
-			"command": "dotnet build"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Project",
+      "type": "shell",
+      "command": "dotnet build"
+    },
+    {
+      "label": "Build Project",
+      "type": "shell",
+      "command": "dotnet build"
+    },
+    {
+      "label": "Build Project",
+      "type": "shell",
+      "command": "dotnet build"
+    },
+    {
+      "label": "Start Azurite",
+      "type": "shell",
+      "command": "azurite",
+      "args": [
+        "--silent",
+        "--location",
+        "${workspaceFolder}",
+        "--debug",
+        "${workspaceFolder}/azurite-debug.log"
+      ],
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
 }

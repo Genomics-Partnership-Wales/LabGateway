@@ -3,7 +3,7 @@
 > Quick reference for .NET Aspire development with Azure Functions and container runtimes.
 
 **Aspire Version**: 13.0.1  
-**Last Updated**: December 2, 2025
+**Last Updated**: December 4, 2025
 
 ---
 
@@ -44,16 +44,31 @@ Container runtime 'podman' was found but appears to be unhealthy.
 Exited with error code -532462766
 ```
 
-### 3. local.settings.json Not Loaded via Aspire
+### 4. Azurite Must Be Running for Azure Functions
 
-When running Azure Functions through Aspire, `local.settings.json` is **NOT** automatically loaded. Pass configuration via AppHost:
+When running Azure Functions with blob triggers, Azurite (Azure Storage emulator) must be active:
 
-```csharp
-// In AppHost.cs
-var api = builder.AddAzureFunctionsProject<Projects.MyApi>("api")
-    .WithEnvironment("MyConfigKey", "value")
-    .WithEnvironment("ConnectionStrings__MyDb", connectionString);
+```powershell
+# ✅ CORRECT - AppHost automatically starts Azurite
+dotnet run --project .\src\AppHost\
+
+# ✅ ALTERNATIVE - Start Azurite manually first
+azurite --silent --location . --debug azurite-debug.log
+# Then run functions: cd src/API && func start
 ```
+
+**Symptoms of Azurite not running:**
+```
+System.AggregateException: Retry failed after 6 tries... 
+No connection could be made because the target machine actively refused it. (127.0.0.1:10000)
+```
+
+**Azurite endpoints:**
+- **Blob Storage:** `http://127.0.0.1:10000`
+- **Queue Storage:** `http://127.0.0.1:10001`
+- **Table Storage:** `http://127.0.0.1:10002`
+
+**VS Code Task:** Run "Start Azurite" task to launch Azurite in background.
 
 ---
 
@@ -165,6 +180,7 @@ var api = builder.AddProject<Projects.MyApi>("api")
 |-----------|-----|---------|----------|
 | `-532462766` | `0xE0434352` | Unhandled .NET exception | Check container runtime, configuration |
 | Timeout 120s | - | DCP IDE timeout | Use `dotnet run` not `dotnet watch` |
+| Connection refused 127.0.0.1:10000 | - | Azurite not running | Use AppHost or start Azurite manually |
 
 ---
 
@@ -215,6 +231,12 @@ Navigate to **Console** tab for each resource to see startup errors.
 ```powershell
 # Test Azurite blob endpoint
 curl http://localhost:10000/devstoreaccount1
+
+# Test Azurite queue endpoint  
+curl http://localhost:10001/devstoreaccount1
+
+# Test Azurite table endpoint
+curl http://localhost:10002/devstoreaccount1
 ```
 
 ### 3. Check Container Status
@@ -244,4 +266,5 @@ Console.WriteLine($"Storage: {config.GetConnectionString("blobs")}");
 
 | Date | Changes |
 |------|---------|
+| 2025-12-04 | Added Azurite gotcha, error codes, and debugging tips |
 | 2025-12-02 | Initial version with gotchas from debugging session |
