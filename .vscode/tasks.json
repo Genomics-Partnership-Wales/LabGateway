@@ -21,6 +21,12 @@
       "type": "shell",
       "command": "azurite",
       "args": [
+        "--blobPort",
+        "10010",
+        "--queuePort",
+        "10011",
+        "--tablePort",
+        "10012",
         "--silent",
         "--location",
         "${workspaceFolder}",
