@@ -4,7 +4,7 @@ version: 1.0
 date_created: 2025-11-27
 last_updated: 2025-12-04
 owner: Development Team
-status: 'In Progress'
+status: 'Completed'
 priority: 'High'
 tags: [feature, reliability, resilience, idempotency, health-checks, azure-functions]
 ---
@@ -72,8 +72,8 @@ This implementation plan defines the architecture and implementation steps for a
 | Task | Description | Completed | Date |
 |------|-------------|-----------|------|
 | TASK-001 | Create `src/API/Domain/Interfaces/IIdempotencyService.cs` interface with methods: `Task<bool> HasBeenProcessedAsync(string blobName, byte[] contentHash)`, `Task MarkAsProcessedAsync(string blobName, byte[] contentHash, ProcessingOutcome outcome)` | ✅ | 2025-12-04 |
-| TASK-002 | Create `src/API/Domain/ValueObjects/IdempotencyKey.cs` value object combining blob name and content hash with validation | ⬜ | |
-| TASK-003 | Create `src/API/Domain/Entities/ProcessingRecord.cs` entity representing a processed blob with properties: IdempotencyKey, BlobName, ContentHash, ProcessedAt, Outcome, CorrelationId | ⬜ | |
+| TASK-002 | Create `src/API/Domain/ValueObjects/IdempotencyKey.cs` value object combining blob name and content hash with validation | ✅ | 2025-12-04 |
+| TASK-003 | Create `src/API/Domain/Entities/ProcessingRecord.cs` entity representing a processed blob with properties: IdempotencyKey, BlobName, ContentHash, ProcessedAt, Outcome, CorrelationId | ✅ | 2025-12-04 |
 | TASK-004 | Create `src/API/Application/Options/IdempotencyOptions.cs` configuration class with properties: TableName, TTLHours, StorageConnection | ✅ | 2025-12-04 |
 | TASK-005 | Create `src/API/Infrastructure/Storage/TableStorageIdempotencyService.cs` implementing IIdempotencyService with Azure Table Storage operations | ✅ | 2025-12-04 |
 | TASK-006 | Add Azure.Data.Tables NuGet package reference to `LabResultsGateway.API.csproj` | ✅ | 2025-12-04 |
@@ -91,7 +91,7 @@ This implementation plan defines the architecture and implementation steps for a
 | TASK-011 | Check idempotency before processing: if already processed, log and return early | ✅ | 2025-12-04 |
 | TASK-012 | Mark blob as processed after successful processing with ProcessingOutcome.Success | ✅ | 2025-12-04 |
 | TASK-013 | Mark blob with ProcessingOutcome.Failed on exception before moving to Failed folder | ✅ | 2025-12-04 |
-| TASK-014 | Add telemetry metrics for idempotency hits (skipped) vs misses (processed) | ⬜ | |
+| TASK-014 | Add telemetry metrics for idempotency hits (skipped) vs misses (processed) | ✅ | 2025-12-04 |
 
 ### Phase 3: Health Check Infrastructure
 
